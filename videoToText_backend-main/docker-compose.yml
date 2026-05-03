@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "6001:6001"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      redis_video_to_text:
+        condition: service_healthy
+    command: npm run watch
+
+  redis_video_to_text:
+    image: redis:latest
+    container_name: redis_video_to_text
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    ports:
+      - "13068:6379"

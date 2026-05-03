@@ -1,0 +1,10 @@
+.env
+firebase-admin.json*
+*.json.json
+credentials/
+env/
+node_modules/
+dist/
+public/
+exports/
+.DS_Store

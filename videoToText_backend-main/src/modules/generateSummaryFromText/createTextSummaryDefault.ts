@@ -1,0 +1,21 @@
+import { Types } from "mongoose";
+import { GeneratedSummaryTextModel } from "./schema";
+
+export const createTextSummaryByDefault = async (userId:string | Types.ObjectId) => {
+    await GeneratedSummaryTextModel.create({
+  actionPoints: [],
+  aiResponse: "{\"title\":\"Summary of Krishna's Early Life\",\"summary\":\"- Krishna's life is detailed in the Mahabharata, Puranas, and Bhagavata Purana.\\n- He is the eighth son of Devaki and Vasudeva, born in a Mathura prison due to King Kamsa's tyranny.\\n- Kamsa imprisoned Devaki and Vasudeva, killing their first six children to prevent a prophecy of his death by Devaki's eighth son.\\n- Miraculous events at Krishna's birth allowed Vasudeva to take him across the Yamuna River to foster parents Yashoda and Nanda.\\n- Janmashtami celebrates this legend with fasting, devotional songs, and vigils.\\n- Balarama, Krishna's half-brother, was a constant companion throughout his childhood and young adult life.\\n- Krishna and Balarama participated in celebrated events in Vraja, Brindavan, Dravarka, and Mathura, including stealing butter, chasing calves, playing in cow pens, and wrestling.\",\"keypoints\":[\"Krishna's birth in a Mathura prison.\",\"Kamsa's attempts to kill Krishna to avert a prophecy.\",\"Krishna's upbringing by foster parents Yashoda and Nanda.\",\"Celebration of Krishna's birth on Janmashtami.\",\"Balarama's constant companionship with Krishna.\"],\"actionpoints\":[]}",
+  folderId: null,
+  keyPoints: [
+    "Krishna's birth in a Mathura prison.",
+    "Kamsa's attempts to kill Krishna to avert a prophecy.",
+    "Krishna's upbringing by foster parents Yashoda and Nanda.",
+    "Celebration of Krishna's birth on Janmashtami.",
+    "Balarama's constant companionship with Krishna."
+  ],
+  summarization: "- Krishna's life is detailed in the Mahabharata, Puranas, and Bhagavata Purana.\n- He is the eighth son of Devaki and Vasudeva, born in a Mathura prison due to King Kamsa's tyranny.\n- Kamsa imprisoned Devaki and Vasudeva, killing their first six children to prevent a prophecy of his death by Devaki's eighth son.\n- Miraculous events at Krishna's birth allowed Vasudeva to take him across the Yamuna River to foster parents Yashoda and Nanda.\n- Janmashtami celebrates this legend with fasting, devotional songs, and vigils.\n- Balarama, Krishna's half-brother, was a constant companion throughout his childhood and young adult life.\n- Krishna and Balarama participated in celebrated events in Vraja, Brindavan, Dravarka, and Mathura, including stealing butter, chasing calves, playing in cow pens, and wrestling.",
+  title: "Summary of Krishna's Early Life",
+  text: "Information about Krishnas life is noted in the Mahabharata, the Puranas, and Bhagavata Purana. Krishna is the eighth son of Devaki (mother) and Vasudeva (father).[5] Surrounding the time of his birth, persecution was rampant, freedoms were being denied, and King Kamsas life was threatened.[14] Krishna was born within a prison in Mathura, India where his parents were constrained by his uncle, Kamsa.[5] During Devakis wedding, Kamsa was warned by a celestial voice that Devakis eighth son would be the cause of his death.[5] In an effort to defy this prophesy, Kamsa imprisoned his sister Devaki and her husband and promptly killed the first six of her newborns after their birth.[5] The guards responsible for keeping watch over Devakis cell fell asleep and the cell doors were miraculously opened at the time of Krishnas birth.[5] These events allowed Vasudeva to send Krishna across the Yamuna River to his foster parents, Yashoda (mother) and Nanda (father).[5] This legend is celebrated on Janmashtami by people keeping fasts, singing devotional songs of love for Krishna, and keeping a vigil into the night.[15]\n\nThroughout Krishnas childhood and young adult life, Balarama, Krishnas half-brother, was a constant companion for him. Balarama joined Krishna in the major events that are celebrated in Vraja, Brindavan, Dravarka, and Mathura such as stealing butter, chasing calves, playing in the cow pens, and participating in wrestling matches.[16]",
+  userId,
+})
+}
