@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:6001', // Default backend port from server.ts
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:6001', // Dynamic URL for production, fallback to local
     withCredentials: true,
 });
 

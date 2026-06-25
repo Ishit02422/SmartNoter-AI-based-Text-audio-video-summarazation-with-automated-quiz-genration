@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,14 +28,10 @@ const Pricing = () => {
     }
 
     try {
-      // 1. Create Order on your backend
-      // Replace with your actual backend URL or use the axios instance from your project
-      const token = localStorage.getItem('token'); // or however you store auth
-      
-      const { data } = await axios.post(
-        'http://localhost:6001/payment/create-order',
-        { amount, currency: 'INR' },
-        { headers: { Authorization: `Bearer ${token}` } }
+      // 1. Create Order on your backend using the unified api instance
+      const { data } = await api.post(
+        '/payment/create-order',
+        { amount, currency: 'INR' }
       );
 
       if (!data.success) {
@@ -53,16 +49,15 @@ const Pricing = () => {
         description: `Upgrade to ${planName}`,
         order_id: data.order.id,
         handler: async function (response: any) {
-          // 3. Verify Payment on Backend
+          // 3. Verify Payment on Backend using the unified api instance
           try {
-            const verifyData = await axios.post(
-              'http://localhost:6001/payment/verify',
+            const verifyData = await api.post(
+              '/payment/verify',
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-              },
-              { headers: { Authorization: `Bearer ${token}` } }
+              }
             );
 
             if (verifyData.data.success) {
