@@ -13,6 +13,10 @@ export const firebase = () => {
       const safeSubstring = raw.substring(Math.max(0, 140), Math.min(raw.length, 240));
       console.error(`Sub-string around index 140-240: "${safeSubstring}"`);
       
+      // Mask all letters and numbers to inspect the structure securely
+      const masked = raw.replace(/[a-zA-Z0-9]/g, "x");
+      console.error("Masked structure for debugging:\n", masked);
+      
       try {
         const extractField = (field: string) => {
           const match = raw.match(new RegExp(`"${field}"\\s*:\\s*"([^"]+)"`));
