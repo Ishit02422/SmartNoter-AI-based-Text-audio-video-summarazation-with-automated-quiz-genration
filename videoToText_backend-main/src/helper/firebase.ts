@@ -32,9 +32,10 @@ export const firebase = () => {
         const client_id = extractField("client_id");
 
         if (project_id && private_key && client_email) {
-          // Normalize private key: convert escaped newlines into real newlines
+          // Normalize private key: convert escaped newlines into real newlines, and strip any leftover backslashes
           private_key = private_key
             .replace(/\\n/g, "\n")
+            .replace(/\\/g, "")
             .replace(/\n\n/g, "\n");
           
           serviceAccount = {
