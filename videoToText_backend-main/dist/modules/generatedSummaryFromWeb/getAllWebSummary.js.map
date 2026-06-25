@@ -1,0 +1,1 @@
+{"version":3,"file":"getAllWebSummary.js","sourceRoot":"","sources":["../../../src/modules/generatedSummaryFromWeb/getAllWebSummary.ts"],"names":[],"mappings":";;;AAAA,qCAAoD;AACpD;;;;GAIG;AACI,MAAM,gBAAgB,GAAG,KAAK,EAAE,MAAc,EAAE,EAAE;IACvD,MAAM,SAAS,GAAG,MAAM,iCAAwB,CAAC,IAAI,CAAC,EAAE,MAAM,EAAE,CAAC,CAAC;IAClE,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AAHW,QAAA,gBAAgB,oBAG3B"}

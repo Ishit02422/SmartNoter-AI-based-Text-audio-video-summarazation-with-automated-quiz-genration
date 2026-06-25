@@ -1,0 +1,1 @@
+{"version":3,"file":"deleteSupportedLanguage.js","sourceRoot":"","sources":["../../../src/modules/supportedLanguage/deleteSupportedLanguage.ts"],"names":[],"mappings":";;;AAAA,qCAAkD;AAElD;;;GAGG;AACI,MAAM,uBAAuB,GAAG,KAAK,EAAE,mBAA2B,EAAE,EAAE;IAC3E,MAAM,+BAAsB,CAAC,iBAAiB,CAAC,mBAAmB,CAAC,CAAC;AACtE,CAAC,CAAC;AAFW,QAAA,uBAAuB,2BAElC"}

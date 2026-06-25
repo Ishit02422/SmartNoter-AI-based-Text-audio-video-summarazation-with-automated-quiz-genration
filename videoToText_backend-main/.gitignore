@@ -4,7 +4,6 @@ firebase-admin.json*
 credentials/
 env/
 node_modules/
-dist/
 public/
 exports/
 .DS_Store

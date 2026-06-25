@@ -1,0 +1,1 @@
+{"version":3,"file":"getAllTextSummary.js","sourceRoot":"","sources":["../../../src/modules/generateSummaryFromText/getAllTextSummary.ts"],"names":[],"mappings":";;;AAAA,qCAAqD;AACrD;;;;GAIG;AACI,MAAM,iBAAiB,GAAG,KAAK,EAAE,MAAc,EAAE,EAAE;IACxD,MAAM,SAAS,GAAG,MAAM,kCAAyB,CAAC,IAAI,CAAC,EAAE,MAAM,EAAE,CAAC,CAAC;IACnE,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AAHW,QAAA,iBAAiB,qBAG5B"}

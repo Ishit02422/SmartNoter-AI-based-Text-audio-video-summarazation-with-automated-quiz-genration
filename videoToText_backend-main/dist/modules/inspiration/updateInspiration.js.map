@@ -1,0 +1,1 @@
+{"version":3,"file":"updateInspiration.js","sourceRoot":"","sources":["../../../src/modules/inspiration/updateInspiration.ts"],"names":[],"mappings":";;;AACA,qCAA4C;AAE5C;;;;GAIG;AACI,MAAM,iBAAiB,GAAG,KAAK,EAAE,WAAwB,EAAE,EAAE;IAClE,MAAM,yBAAgB,CAAC,iBAAiB,CACtC,WAAW,CAAC,GAAG,EACf,WAAW,CAAC,MAAM,EAAE,CACrB,CAAC;IACF,OAAO,WAAW,CAAC;AACrB,CAAC,CAAC;AANW,QAAA,iBAAiB,qBAM5B"}

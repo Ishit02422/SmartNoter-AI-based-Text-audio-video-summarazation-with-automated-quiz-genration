@@ -1,0 +1,1 @@
+{"version":3,"file":"saveChat.js","sourceRoot":"","sources":["../../../src/modules/chatWithAI/saveChat.ts"],"names":[],"mappings":";;;AACA,qCAA2C;AAC3C;;;;GAIG;AACI,MAAM,QAAQ,GAAG,KAAK,EAAE,IAAiC,EAAE,EAAE;IAClE,MAAM,SAAS,GAAG,MAAM,wBAAe,CAAC,MAAM,CAAC,IAAI,CAAC,CAAC;IACrD,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AAHW,QAAA,QAAQ,YAGnB"}

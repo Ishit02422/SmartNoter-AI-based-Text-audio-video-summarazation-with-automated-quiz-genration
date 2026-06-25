@@ -1,0 +1,1 @@
+{"version":3,"file":"getQuizById.js","sourceRoot":"","sources":["../../../src/modules/quiz/getQuizById.ts"],"names":[],"mappings":";;;AACA,qCAAqC;AAGrC;;;;;GAKG;AACI,MAAM,WAAW,GAAG,KAAK,EAC9B,MAAsB,EACtB,MAA+B,EAC/B,EAAE;IACF,MAAM,IAAI,GAAG,MAAM,kBAAS,CAAC,OAAO,CAAC,EAAE,GAAG,EAAE,MAAM,EAAE,MAAM,EAAE,CAAC,CAAC;IAC9D,OAAO,IAAI,CAAC;AACd,CAAC,CAAC;AANW,QAAA,WAAW,eAMtB"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"saveQuiz.js","sourceRoot":"","sources":["../../../src/modules/quiz/saveQuiz.ts"],"names":[],"mappings":";;;AAAA,qCAAqC;AAGrC;;;;GAIG;AACI,MAAM,QAAQ,GAAG,KAAK,EAAE,QAAyB,EAAE,EAAE;IAC1D,MAAM,IAAI,GAAG,MAAM,kBAAS,CAAC,MAAM,CAAC,QAAQ,CAAC,CAAC;IAC9C,OAAO,IAAI,CAAC;AACd,CAAC,CAAC;AAHW,QAAA,QAAQ,YAGnB"}

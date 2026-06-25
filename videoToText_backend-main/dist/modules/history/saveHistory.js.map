@@ -1,0 +1,1 @@
+{"version":3,"file":"saveHistory.js","sourceRoot":"","sources":["../../../src/modules/history/saveHistory.ts"],"names":[],"mappings":";;;AAAA,8CAAgD;AAEhD;;;;GAIG;AACI,MAAM,WAAW,GAAG,KAAK,EAAE,IAAa,EAAE,EAAE;IACjD,MAAM,SAAS,GAAG,MAAM,IAAI,sBAAY,CAAC,IAAI,CAAC,CAAC,IAAI,EAAE,CAAC;IACtD,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AAHW,QAAA,WAAW,eAGtB"}

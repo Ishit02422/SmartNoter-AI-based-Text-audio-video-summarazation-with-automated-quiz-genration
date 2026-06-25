@@ -1,0 +1,1 @@
+{"version":3,"file":"getAllVideoSummary.js","sourceRoot":"","sources":["../../../src/modules/generateSummaryFromYoutube/getAllVideoSummary.ts"],"names":[],"mappings":";;;AAAA,qCAAiD;AACjD;;;;GAIG;AACI,MAAM,kBAAkB,GAAG,KAAK,EAAE,MAAc,EAAE,EAAE;IACzD,MAAM,SAAS,GAAG,MAAM,8BAAqB,CAAC,IAAI,CAAC,EAAE,MAAM,EAAE,CAAC,CAAC;IAC/D,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AAHW,QAAA,kBAAkB,sBAG7B"}
