@@ -189,6 +189,24 @@ Input: {input}`;
     }
   }
 
+  private mergeCookies(c1: string | null, c2: string | null): string {
+    const map = new Map<string, string>();
+    const parse = (str: string | null) => {
+      if (!str) return;
+      str.split(";").forEach(p => {
+        const idx = p.indexOf("=");
+        if (idx > 0) {
+          const key = p.substring(0, idx).trim();
+          const val = p.substring(idx + 1).trim();
+          if (key) map.set(key, val);
+        }
+      });
+    };
+    parse(c1);
+    parse(c2);
+    return Array.from(map.entries()).map(([k, v]) => `${k}=${v}`).join("; ");
+  }
+
   // ─────────────────────────────────────────────────────────────
   // METHOD 3: Direct HTTP scrape (TWO separate header sets)
   // ─────────────────────────────────────────────────────────────
@@ -210,6 +228,8 @@ Input: {input}`;
     );
     const html: string = pageRes.data;
     const setCookies: string[] = (pageRes.headers["set-cookie"] as string[] | undefined) || [];
+    const responseCookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
+    const finalCookieStr = this.mergeCookies(cookieHeader, responseCookieStr);
     console.log("  Page: " + html.length + " chars | cookies received: " + setCookies.length + " | captionTracks: " + html.includes('"captionTracks"'));
 
     if (!html.includes('"captionTracks"')) throw new Error("No captionTracks — video has no captions");
@@ -240,7 +260,7 @@ Input: {input}`;
       "Sec-Fetch-Mode": "cors",
       "Sec-Fetch-Site": "same-origin",
     };
-    if (cookieHeader) fetchHdr["Cookie"] = cookieHeader;
+    if (finalCookieStr) fetchHdr["Cookie"] = finalCookieStr;
 
     const decodeHtml = (s: string) =>
       s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')

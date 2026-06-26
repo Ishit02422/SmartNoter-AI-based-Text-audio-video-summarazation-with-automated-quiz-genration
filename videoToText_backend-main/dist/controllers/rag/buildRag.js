@@ -227,6 +227,25 @@ Input: {input}`;
             return { cookieHeader: null, cookiesFilePath: null };
         }
     }
+    mergeCookies(c1, c2) {
+        const map = new Map();
+        const parse = (str) => {
+            if (!str)
+                return;
+            str.split(";").forEach(p => {
+                const idx = p.indexOf("=");
+                if (idx > 0) {
+                    const key = p.substring(0, idx).trim();
+                    const val = p.substring(idx + 1).trim();
+                    if (key)
+                        map.set(key, val);
+                }
+            });
+        };
+        parse(c1);
+        parse(c2);
+        return Array.from(map.entries()).map(([k, v]) => `${k}=${v}`).join("; ");
+    }
     // ─────────────────────────────────────────────────────────────
     // METHOD 3: Direct HTTP scrape (TWO separate header sets)
     // ─────────────────────────────────────────────────────────────
@@ -245,6 +264,8 @@ Input: {input}`;
         const pageRes = await axios_1.default.get(`https://www.youtube.com/watch?v=${videoId}&hl=en`, { headers: pageHdr, timeout: 20000, responseType: "text" });
         const html = pageRes.data;
         const setCookies = pageRes.headers["set-cookie"] || [];
+        const responseCookieStr = setCookies.map((c) => c.split(";")[0]).join("; ");
+        const finalCookieStr = this.mergeCookies(cookieHeader, responseCookieStr);
         console.log("  Page: " + html.length + " chars | cookies received: " + setCookies.length + " | captionTracks: " + html.includes('"captionTracks"'));
         if (!html.includes('"captionTracks"'))
             throw new Error("No captionTracks — video has no captions");
@@ -281,8 +302,8 @@ Input: {input}`;
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
         };
-        if (cookieHeader)
-            fetchHdr["Cookie"] = cookieHeader;
+        if (finalCookieStr)
+            fetchHdr["Cookie"] = finalCookieStr;
         const decodeHtml = (s) => s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
             .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
         const extractSegs = (events) => events.filter((e) => Array.isArray(e.segs))
