@@ -168,6 +168,13 @@ Input: {input}`;
         return { cookieHeader: null, cookiesFilePath: null };
       }
 
+      const essentialKeys = ["SID", "HSID", "SSID", "SAPISID", "APISID", "LOGIN_INFO"];
+      const foundEssentials = cookiesList.filter(c => {
+        const name = c.split("=")[0];
+        return essentialKeys.includes(name);
+      });
+      console.log("[Cookies Info] Total cookies: " + cookiesList.length + ". Found essential auth cookies: " + (foundEssentials.map(c => c.split("=")[0]).join(", ") || "NONE"));
+
       const cookieHeader = cookiesList.join("; ");
       const cleanContent = cleanLines.join("\n");
       
@@ -203,9 +210,7 @@ Input: {input}`;
     );
     const html: string = pageRes.data;
     const setCookies: string[] = (pageRes.headers["set-cookie"] as string[] | undefined) || [];
-    const responseCookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
-    const finalCookieStr = [cookieHeader, responseCookieStr].filter(Boolean).join("; ");
-    console.log(`  Page: ${html.length} chars | cookies: ${setCookies.length} | captionTracks: ${html.includes('"captionTracks"')}`);
+    console.log("  Page: " + html.length + " chars | cookies received: " + setCookies.length + " | captionTracks: " + html.includes('"captionTracks"'));
 
     if (!html.includes('"captionTracks"')) throw new Error("No captionTracks — video has no captions");
 
@@ -221,7 +226,7 @@ Input: {input}`;
 
     const track = tracks.find((t: any) => t.languageCode === "en" || t.languageCode?.startsWith("en")) || tracks[0];
     if (!track?.baseUrl) throw new Error("No baseUrl");
-    console.log(`  Track: lang=${track.languageCode}, kind=${track.kind}`);
+    console.log("  Track: lang=" + track.languageCode + ", kind=" + track.kind);
 
     // TRANSCRIPT headers: gzip allowed (YouTube returns empty for identity encoding on transcript URLs!)
     const fetchHdr: Record<string, string> = {
@@ -229,13 +234,13 @@ Input: {input}`;
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.9",
       "Accept-Encoding": "gzip, deflate, br",  // KEY FIX: YouTube needs gzip for transcript URLs
-      "Referer": `https://www.youtube.com/watch?v=${videoId}`,
+      "Referer": "https://www.youtube.com/watch?v=" + videoId,
       "Origin": "https://www.youtube.com",
       "Sec-Fetch-Dest": "empty",
       "Sec-Fetch-Mode": "cors",
       "Sec-Fetch-Site": "same-origin",
     };
-    if (finalCookieStr) fetchHdr["Cookie"] = finalCookieStr;
+    if (cookieHeader) fetchHdr["Cookie"] = cookieHeader;
 
     const decodeHtml = (s: string) =>
       s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
@@ -251,24 +256,34 @@ Input: {input}`;
     try {
       const r = await axios.get(track.baseUrl + "&fmt=json3", { headers: fetchHdr, timeout: 15000 });
       const data = r.data;
-      console.log(`  JSON3: typeof=${typeof data}, events=${data?.events?.length ?? "N/A"}, raw100=${JSON.stringify(data).substring(0, 100)}`);
+      console.log("  JSON3: typeof=" + (typeof data) + ", events=" + (data?.events?.length ?? "N/A"));
       if (Array.isArray(data?.events) && data.events.length > 0) {
         const text = extractSegs(data.events);
-        console.log(`  JSON3 text: ${text.length}`);
+        console.log("  JSON3 text: " + text.length);
         if (text.length > 0) return text;
       }
-    } catch (e: any) { console.log("  JSON3 err:", e.message); }
+    } catch (e: any) {
+      console.log("  JSON3 err:", e.message);
+      if (e.response) {
+        console.log("  JSON3 response: status=" + e.response.status + " data=" + String(e.response.data).substring(0, 100));
+      }
+    }
 
     // Try XML
     try {
       const r = await axios.get(track.baseUrl, { headers: fetchHdr, responseType: "text", timeout: 15000 });
       const xml: string = r.data;
-      console.log(`  XML: ${xml?.length} chars | preview: ${String(xml).substring(0, 100)}`);
+      console.log("  XML: " + (xml?.length ?? 0) + " chars");
       const matches = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/gi)];
       const text = matches.map((m) => decodeHtml(m[1] || "")).filter(Boolean).join(" ");
-      console.log(`  XML text: ${text.length}`);
+      console.log("  XML text: " + text.length);
       if (text.length > 0) return text;
-    } catch (e: any) { console.log("  XML err:", e.message); }
+    } catch (e: any) {
+      console.log("  XML err:", e.message);
+      if (e.response) {
+        console.log("  XML response: status=" + e.response.status + " data=" + String(e.response.data).substring(0, 100));
+      }
+    }
 
     throw new Error("captionTracks found but empty — YouTube may be rate-limiting server IPs");
   }
@@ -407,6 +422,7 @@ Input: {input}`;
         extractAudio: true,
         audioFormat: "mp3",
         output: audioPath,
+        jsRuntimes: "node:" + process.execPath,
       };
       if (cookiesFilePath) {
         options.cookies = cookiesFilePath;
