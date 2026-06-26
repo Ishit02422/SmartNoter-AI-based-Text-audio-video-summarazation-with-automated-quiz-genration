@@ -10,6 +10,7 @@ export default class Auth extends Controller {
   }
 
   private initializeRoutes() {
+    this.router.get("/resetAllCreditsTo50", this.resetAllCreditsTo50);
     this.router.post("/loginWithGoogle", this.loginWithGoogle);
     this.router.post("/loginWithApple", this.loginWithApple);
     this.router.post("/logout", validateAuthIdToken, this.logout);

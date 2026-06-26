@@ -34,6 +34,21 @@ import { checkTextSummaryIsExistById } from "../../modules/generateSummaryFromTe
 import { checkIfExistSummaryWithUserid } from "../../modules/generateSummaryFromText/checkIfExistSummaryWithUserid";
 
 export default class Controller {
+  public readonly resetAllCreditsTo50 = async (req: Request, res: Response) => {
+    try {
+      const result = await UserModel.updateMany({}, { $set: { dailyCredits: 50 } });
+      return res.status(200).json({
+        success: true,
+        message: `Successfully reset credits to 50 for ${result.modifiedCount} users.`,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  };
+
   private readonly loginWithGoogleSchema = Joi.object({
     firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
