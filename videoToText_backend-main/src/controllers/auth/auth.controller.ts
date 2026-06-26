@@ -441,7 +441,7 @@ export default class Controller {
               isGoogleLogin: true,
               dailyCredits: guestUser && !guestUser.isTransferred
                 ? guestUser.dailyCredits
-                : 5,
+                : 50,
               deviceId: "",
             };
 
@@ -982,7 +982,7 @@ export default class Controller {
               isAppleLogin: true,
               dailyCredits: guestUser && !guestUser.isTransferred
                 ? guestUser.dailyCredits
-                : 5,
+                : 50,
 
               // isEmailVerified: true,
               deviceId: "",
