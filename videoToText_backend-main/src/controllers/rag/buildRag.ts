@@ -100,18 +100,75 @@ Input: {input}`;
     throw new Error(`All methods failed:\n${errs.join("\n")}`);
   }
 
+  private getCookieString(): string | null {
+    const fs = require("fs");
+    const path = require("path");
+    let cookiesPath: string | null = null;
+    let tempCookiesFile: string | null = null;
+
+    if (process.env.YOUTUBE_COOKIES_CONTENT) {
+      try {
+        tempCookiesFile = path.resolve(__dirname, `temp_cookies_str.txt`);
+        fs.writeFileSync(tempCookiesFile, process.env.YOUTUBE_COOKIES_CONTENT, "utf8");
+        cookiesPath = tempCookiesFile;
+      } catch (err: any) {
+        console.error("Failed to write temporary cookies file:", err.message);
+      }
+    } else {
+      const potentialPaths = [
+        path.resolve(process.cwd(), "cookies.txt"),
+        path.resolve(__dirname, "cookies.txt"),
+        path.resolve(__dirname, "../../cookies.txt"),
+        path.resolve(__dirname, "../../../cookies.txt"),
+      ];
+      for (const p of potentialPaths) {
+        if (fs.existsSync(p)) {
+          cookiesPath = p;
+          break;
+        }
+      }
+    }
+
+    if (cookiesPath) {
+      try {
+        const cookieContent = fs.readFileSync(cookiesPath, "utf8");
+        const lines = cookieContent.split("\n");
+        const cookiesList: string[] = [];
+        for (let line of lines) {
+          line = line.trim();
+          if (!line || line.startsWith("#")) continue;
+          const parts = line.split("\t");
+          if (parts.length >= 7) {
+            cookiesList.push(`${parts[5]}=${parts[6]}`);
+          }
+        }
+        if (tempCookiesFile && fs.existsSync(tempCookiesFile)) {
+          fs.unlink(tempCookiesFile, () => { });
+        }
+        return cookiesList.join("; ");
+      } catch (err: any) {
+        console.error("Failed to parse cookies:", err.message);
+      }
+    }
+    return null;
+  }
+
   // ─────────────────────────────────────────────────────────────
   // METHOD 3: Direct HTTP scrape (TWO separate header sets)
   // ─────────────────────────────────────────────────────────────
   private async scrapeYouTubeCaptions(videoId: string): Promise<string> {
+    const passedCookieStr = this.getCookieString();
 
     // PAGE headers: identity encoding so HTML is easy to parse
-    const pageHdr = {
+    const pageHdr: any = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
       "Accept-Language": "en-US,en;q=0.9",
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Encoding": "identity",
     };
+    if (passedCookieStr) {
+      pageHdr["Cookie"] = passedCookieStr;
+    }
 
     const pageRes = await axios.get(
       `https://www.youtube.com/watch?v=${videoId}&hl=en`,
@@ -119,7 +176,8 @@ Input: {input}`;
     );
     const html: string = pageRes.data;
     const setCookies: string[] = (pageRes.headers["set-cookie"] as string[] | undefined) || [];
-    const cookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
+    const responseCookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
+    const finalCookieStr = [passedCookieStr, responseCookieStr].filter(Boolean).join("; ");
     console.log(`  Page: ${html.length} chars | cookies: ${setCookies.length} | captionTracks: ${html.includes('"captionTracks"')}`);
 
     if (!html.includes('"captionTracks"')) throw new Error("No captionTracks — video has no captions");
@@ -150,7 +208,7 @@ Input: {input}`;
       "Sec-Fetch-Mode": "cors",
       "Sec-Fetch-Site": "same-origin",
     };
-    if (cookieStr) fetchHdr["Cookie"] = cookieStr;
+    if (finalCookieStr) fetchHdr["Cookie"] = finalCookieStr;
 
     const decodeHtml = (s: string) =>
       s.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
