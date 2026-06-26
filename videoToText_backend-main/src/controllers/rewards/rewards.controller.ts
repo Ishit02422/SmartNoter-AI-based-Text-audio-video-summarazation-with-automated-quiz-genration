@@ -131,8 +131,10 @@ export default class Controller {
       await updateUserByQry({
         query: { _id: authUser._id },
         update: {
-          dailyCredits: creditForUseCodeUser,
-          rewardCount: creditForUseCodeUser,
+          $inc: {
+            dailyCredits: creditForUseCodeUser,
+            rewardCount: creditForUseCodeUser,
+          },
         },
       });
 
