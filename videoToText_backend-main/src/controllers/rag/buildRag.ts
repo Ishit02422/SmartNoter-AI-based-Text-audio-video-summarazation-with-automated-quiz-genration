@@ -296,14 +296,76 @@ Input: {input}`;
       return videoUrl;
     })();
 
+    // Resolve cookies for bypassing "Sign in to confirm you're not a bot" error
+    let cookiesPath: string | null = null;
+    let tempCookiesFile: string | null = null;
+
+    if (process.env.YOUTUBE_COOKIES_CONTENT) {
+      try {
+        tempCookiesFile = path.resolve(__dirname, `temp_cookies_${Date.now()}.txt`);
+        fs.writeFileSync(tempCookiesFile, process.env.YOUTUBE_COOKIES_CONTENT, "utf8");
+        cookiesPath = tempCookiesFile;
+        console.log("🔑 Created temporary cookies file from environment variable YOUTUBE_COOKIES_CONTENT");
+      } catch (err: any) {
+        console.error("Failed to write temporary cookies file:", err.message);
+      }
+    } else {
+      const potentialPaths = [
+        path.resolve(process.cwd(), "cookies.txt"),
+        path.resolve(__dirname, "cookies.txt"),
+        path.resolve(__dirname, "../../cookies.txt"),
+        path.resolve(__dirname, "../../../cookies.txt"),
+      ];
+      for (const p of potentialPaths) {
+        if (fs.existsSync(p)) {
+          cookiesPath = p;
+          console.log(`🔑 Found cookies.txt at: ${p}`);
+          break;
+        }
+      }
+    }
+
+    // Configure cookies for play-dl if present
+    if (cookiesPath) {
+      try {
+        const cookieContent = fs.readFileSync(cookiesPath, "utf8");
+        const lines = cookieContent.split("\n");
+        const cookiesList: string[] = [];
+        for (let line of lines) {
+          line = line.trim();
+          if (!line || line.startsWith("#")) continue;
+          const parts = line.split("\t");
+          if (parts.length >= 7) {
+            cookiesList.push(`${parts[5]}=${parts[6]}`);
+          }
+        }
+        const cookieStr = cookiesList.join("; ");
+        if (cookieStr) {
+          const playdl = require("play-dl");
+          playdl.setToken({
+            youtube: {
+              cookie: cookieStr
+            }
+          });
+          console.log("🔑 play-dl youtube cookies configured successfully!");
+        }
+      } catch (err: any) {
+        console.error("Failed to configure play-dl cookies:", err.message);
+      }
+    }
+
     // Try yt-dlp-exec as primary method
     try {
       const youtubedl = require("yt-dlp-exec");
-      await youtubedl(cleanVideoUrl, {
+      const options: any = {
         extractAudio: true,
         audioFormat: "mp3",
         output: audioPath,
-      });
+      };
+      if (cookiesPath) {
+        options.cookies = cookiesPath;
+      }
+      await youtubedl(cleanVideoUrl, options);
       if (fs.existsSync(audioPath)) {
         downloaded = true;
       } else {
@@ -317,11 +379,15 @@ Input: {input}`;
       // Fallback 1: youtube-dl-exec
       try {
         const fallbackDl = require("youtube-dl-exec");
-        await fallbackDl(cleanVideoUrl, {
+        const options: any = {
           extractAudio: true,
           audioFormat: "mp3",
           output: audioPath,
-        });
+        };
+        if (cookiesPath) {
+          options.cookies = cookiesPath;
+        }
+        await fallbackDl(cleanVideoUrl, options);
         if (fs.existsSync(audioPath)) {
           downloaded = true;
         } else {
@@ -358,20 +424,19 @@ Input: {input}`;
     if (!downloaded)
       throw new Error(`Audio download failed: ${errs.join(" | ")}`);
 
-    // ✅ FIX: Upload local file to AssemblyAI first, then use the returned URL
+    // ✅ Upload local file to AssemblyAI
     try {
       const client = new AssemblyAI({ apiKey: assemblyKey });
-
-      // Upload the local mp3 file to AssemblyAI's servers
       const uploadedFile = await client.files.upload(audioPath);
-      // uploadedFile is the public URL string returned by AssemblyAI
-
       const res = await client.transcripts.transcribe({ audio_url: uploadedFile });
       if (res.status === "error") throw new Error(res.error || "AssemblyAI failed");
       return res.text || "";
     } finally {
-      // Always clean up local file
+      // Always clean up local files
       fs.unlink(audioPath, () => { });
+      if (tempCookiesFile && fs.existsSync(tempCookiesFile)) {
+        fs.unlink(tempCookiesFile, () => { });
+      }
     }
   }
 
@@ -398,10 +463,11 @@ Input: {input}`;
           pdfUrl = baseUrl + "/" + pdfUrl.replace(/^\//, "");
         }
 
-        const pdfParse = require("pdf-parse");
+        const { PDFLoader } = require("@langchain/community/document_loaders/fs/pdf");
         const resp = await axios.get(pdfUrl, { responseType: "arraybuffer" });
-        const data = await pdfParse(resp.data);
-        return [{ pageContent: data.text, metadata: { source: pdfUrl } }];
+        const loader = new PDFLoader(new Blob([resp.data]), { splitPages: false });
+        const docs = await loader.load();
+        return [{ pageContent: docs[0]?.pageContent || "", metadata: { source: pdfUrl } }];
 
       } else if (src === "audio" || src === "uploadvideo") {
         let audioUrl = this.payload.audioUrl;

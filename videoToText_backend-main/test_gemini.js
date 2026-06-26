@@ -5,7 +5,7 @@ dotenv.config();
 async function testLlm() {
     try {
         const llm = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             apiKey: process.env.GOOGLE_API_KEY,
         });
         const res = await llm.invoke("Hello, how are you?");
