@@ -85,78 +85,85 @@ Input: {input}`;
         if (!videoId)
             throw new Error("Invalid YouTube URL");
         const errs = [];
-        // 1. youtube-transcript
+        const fs = require("fs");
+        const { cookieHeader, cookiesFilePath } = this.resolveCookies();
         try {
-            console.log("1️⃣ youtube-transcript...");
-            const { YoutubeTranscript } = require("youtube-transcript");
-            const items = await YoutubeTranscript.fetchTranscript(videoId);
-            const text = items.map((t) => t.text).join(" ").replace(/\n/g, " ").trim();
-            if (text.length > 20) {
-                console.log(`✅ [1] ${text.length} chars`);
-                return text;
+            // 1. youtube-transcript
+            try {
+                console.log("Method 1: youtube-transcript...");
+                const { YoutubeTranscript } = require("youtube-transcript");
+                const items = await YoutubeTranscript.fetchTranscript(videoId);
+                const text = items.map((t) => t.text).join(" ").replace(/\n/g, " ").trim();
+                if (text.length > 20) {
+                    console.log("Method 1 success: " + text.length + " chars");
+                    return text;
+                }
+            }
+            catch (e) {
+                errs.push("[1] " + e.message);
+                console.log("Method 1 err:", e.message);
+            }
+            // 2. kome.ai free API
+            try {
+                console.log("Method 2: kome.ai...");
+                const res = await axios_1.default.post("https://api.kome.ai/api/tools/youtube-transcripts", { video_id: videoId, force_fetch: false }, { timeout: 20000, headers: { "Content-Type": "application/json" } });
+                const raw = (_a = res.data) === null || _a === void 0 ? void 0 : _a.transcript;
+                const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.map((x) => x.text || x).join(" ") : "";
+                if (text.length > 20) {
+                    console.log("Method 2 success: " + text.length + " chars");
+                    return text;
+                }
+            }
+            catch (e) {
+                errs.push("[2] " + e.message);
+                console.log("Method 2 err:", e.message);
+            }
+            // 3. Direct HTTP scrape
+            try {
+                console.log("Method 3: Direct caption scrape...");
+                const text = await this.scrapeYouTubeCaptions(videoId, cookieHeader);
+                if (text.length > 20) {
+                    console.log("Method 3 success: " + text.length + " chars");
+                    return text;
+                }
+            }
+            catch (e) {
+                errs.push("[3] " + e.message);
+                console.log("Method 3 err:", e.message);
+            }
+            // 4. Audio - AssemblyAI
+            try {
+                console.log("Method 4: Audio to AssemblyAI...");
+                const text = await this.transcribeAudio(videoUrl, cookieHeader, cookiesFilePath);
+                if (text.length > 20) {
+                    console.log("Method 4 success: " + text.length + " chars");
+                    return text;
+                }
+            }
+            catch (e) {
+                errs.push("[4] " + e.message);
+                console.log("Method 4 err:", e.message);
+            }
+            throw new Error("All methods failed:\n" + errs.join("\n"));
+        }
+        finally {
+            if (cookiesFilePath && fs.existsSync(cookiesFilePath)) {
+                try {
+                    fs.unlinkSync(cookiesFilePath);
+                    console.log("Cleaned up temp cookies file: " + cookiesFilePath);
+                }
+                catch (e) {
+                    console.error("Failed to clean up temp cookies file:", e.message);
+                }
             }
         }
-        catch (e) {
-            errs.push(`[1] ${e.message}`);
-            console.log("❌ [1]", e.message);
-        }
-        // 2. kome.ai free API
-        try {
-            console.log("2️⃣ kome.ai...");
-            const res = await axios_1.default.post("https://api.kome.ai/api/tools/youtube-transcripts", { video_id: videoId, force_fetch: false }, { timeout: 20000, headers: { "Content-Type": "application/json" } });
-            const raw = (_a = res.data) === null || _a === void 0 ? void 0 : _a.transcript;
-            const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.map((x) => x.text || x).join(" ") : "";
-            if (text.length > 20) {
-                console.log(`✅ [2] ${text.length} chars`);
-                return text;
-            }
-        }
-        catch (e) {
-            errs.push(`[2] ${e.message}`);
-            console.log("❌ [2]", e.message);
-        }
-        // 3. Direct HTTP scrape
-        try {
-            console.log("3️⃣ Direct caption scrape...");
-            const text = await this.scrapeYouTubeCaptions(videoId);
-            if (text.length > 20) {
-                console.log(`✅ [3] ${text.length} chars`);
-                return text;
-            }
-        }
-        catch (e) {
-            errs.push(`[3] ${e.message}`);
-            console.log("❌ [3]", e.message);
-        }
-        // 4. Audio → AssemblyAI
-        try {
-            console.log("4️⃣ Audio → AssemblyAI...");
-            const text = await this.transcribeAudio(videoUrl);
-            if (text.length > 20) {
-                console.log(`✅ [4] ${text.length} chars`);
-                return text;
-            }
-        }
-        catch (e) {
-            errs.push(`[4] ${e.message}`);
-            console.log("❌ [4]", e.message);
-        }
-        throw new Error(`All methods failed:\n${errs.join("\n")}`);
     }
-    getCookieString() {
+    resolveCookies() {
         const fs = require("fs");
         const path = require("path");
-        let cookiesPath = null;
-        let tempCookiesFile = null;
+        let rawContent = "";
         if (process.env.YOUTUBE_COOKIES_CONTENT) {
-            try {
-                tempCookiesFile = path.resolve(__dirname, `temp_cookies_str.txt`);
-                fs.writeFileSync(tempCookiesFile, process.env.YOUTUBE_COOKIES_CONTENT, "utf8");
-                cookiesPath = tempCookiesFile;
-            }
-            catch (err) {
-                console.error("Failed to write temporary cookies file:", err.message);
-            }
+            rawContent = process.env.YOUTUBE_COOKIES_CONTENT;
         }
         else {
             const potentialPaths = [
@@ -167,42 +174,58 @@ Input: {input}`;
             ];
             for (const p of potentialPaths) {
                 if (fs.existsSync(p)) {
-                    cookiesPath = p;
-                    break;
-                }
-            }
-        }
-        if (cookiesPath) {
-            try {
-                const cookieContent = fs.readFileSync(cookiesPath, "utf8");
-                const lines = cookieContent.split("\n");
-                const cookiesList = [];
-                for (let line of lines) {
-                    line = line.trim();
-                    if (!line || line.startsWith("#"))
-                        continue;
-                    const parts = line.split("\t");
-                    if (parts.length >= 7) {
-                        cookiesList.push(`${parts[5]}=${parts[6]}`);
+                    try {
+                        rawContent = fs.readFileSync(p, "utf8");
+                        console.log("Found cookies.txt at: " + p);
+                        break;
                     }
+                    catch (e) { }
                 }
-                if (tempCookiesFile && fs.existsSync(tempCookiesFile)) {
-                    fs.unlink(tempCookiesFile, () => { });
-                }
-                return cookiesList.join("; ");
-            }
-            catch (err) {
-                console.error("Failed to parse cookies:", err.message);
             }
         }
-        return null;
+        if (!rawContent) {
+            return { cookieHeader: null, cookiesFilePath: null };
+        }
+        try {
+            const lines = rawContent.split("\n");
+            const cookiesList = [];
+            const cleanLines = [
+                "# Netscape HTTP Cookie File",
+                "# http://curl.haxx.se/rfc/cookie_spec.html",
+                "# This is a generated file! Do not edit.",
+                ""
+            ];
+            for (let line of lines) {
+                line = line.trim();
+                if (!line || line.startsWith("#"))
+                    continue;
+                const parts = line.split(/\s+/);
+                if (parts.length >= 7) {
+                    cleanLines.push(parts.slice(0, 7).join("\t"));
+                    cookiesList.push(parts[5] + "=" + parts[6]);
+                }
+            }
+            if (cookiesList.length === 0) {
+                console.warn("No cookies parsed successfully. Check format.");
+                return { cookieHeader: null, cookiesFilePath: null };
+            }
+            const cookieHeader = cookiesList.join("; ");
+            const cleanContent = cleanLines.join("\n");
+            const tempFile = path.resolve(__dirname, "clean_cookies_" + Date.now() + ".txt");
+            fs.writeFileSync(tempFile, cleanContent, "utf8");
+            console.log("Cookies resolved: " + cookiesList.length + " items parsed. Temp cookies file: " + tempFile);
+            return { cookieHeader, cookiesFilePath: tempFile };
+        }
+        catch (err) {
+            console.error("Error resolving cookies:", err.message);
+            return { cookieHeader: null, cookiesFilePath: null };
+        }
     }
     // ─────────────────────────────────────────────────────────────
     // METHOD 3: Direct HTTP scrape (TWO separate header sets)
     // ─────────────────────────────────────────────────────────────
-    async scrapeYouTubeCaptions(videoId) {
+    async scrapeYouTubeCaptions(videoId, cookieHeader) {
         var _a, _b;
-        const passedCookieStr = this.getCookieString();
         // PAGE headers: identity encoding so HTML is easy to parse
         const pageHdr = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -210,14 +233,14 @@ Input: {input}`;
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Encoding": "identity",
         };
-        if (passedCookieStr) {
-            pageHdr["Cookie"] = passedCookieStr;
+        if (cookieHeader) {
+            pageHdr["Cookie"] = cookieHeader;
         }
         const pageRes = await axios_1.default.get(`https://www.youtube.com/watch?v=${videoId}&hl=en`, { headers: pageHdr, timeout: 20000, responseType: "text" });
         const html = pageRes.data;
         const setCookies = pageRes.headers["set-cookie"] || [];
         const responseCookieStr = setCookies.map((c) => c.split(";")[0]).join("; ");
-        const finalCookieStr = [passedCookieStr, responseCookieStr].filter(Boolean).join("; ");
+        const finalCookieStr = [cookieHeader, responseCookieStr].filter(Boolean).join("; ");
         console.log(`  Page: ${html.length} chars | cookies: ${setCookies.length} | captionTracks: ${html.includes('"captionTracks"')}`);
         if (!html.includes('"captionTracks"'))
             throw new Error("No captionTracks — video has no captions");
@@ -380,76 +403,32 @@ Input: {input}`;
     // ─────────────────────────────────────────────────────────────
     // METHOD 4: Audio download → AssemblyAI
     // ─────────────────────────────────────────────────────────────
-    async transcribeAudio(videoUrl) {
+    async transcribeAudio(videoUrl, cookieHeader, cookiesFilePath) {
         const assemblyKey = process.env.ASSEMBLY_AI_API_KEY || process.env.ASSEMBLYAI_KEY;
         if (!assemblyKey)
             throw new Error("ASSEMBLYAI_KEY missing");
         const fs = require("fs");
         const path = require("path");
         const { AssemblyAI } = require("assemblyai");
-        const audioPath = path.join(__dirname, `audio_${Date.now()}.mp3`);
+        const audioPath = path.join(__dirname, "audio_" + Date.now() + ".mp3");
         let downloaded = false;
         const errs = [];
         const cleanVideoUrl = (() => {
             const vid = this.extractVideoId(videoUrl);
             if (vid)
-                return `https://www.youtube.com/watch?v=${vid}`;
+                return "https://www.youtube.com/watch?v=" + vid;
             return videoUrl;
         })();
-        // Resolve cookies for bypassing "Sign in to confirm you're not a bot" error
-        let cookiesPath = null;
-        let tempCookiesFile = null;
-        if (process.env.YOUTUBE_COOKIES_CONTENT) {
-            try {
-                tempCookiesFile = path.resolve(__dirname, `temp_cookies_${Date.now()}.txt`);
-                fs.writeFileSync(tempCookiesFile, process.env.YOUTUBE_COOKIES_CONTENT, "utf8");
-                cookiesPath = tempCookiesFile;
-                console.log("🔑 Created temporary cookies file from environment variable YOUTUBE_COOKIES_CONTENT");
-            }
-            catch (err) {
-                console.error("Failed to write temporary cookies file:", err.message);
-            }
-        }
-        else {
-            const potentialPaths = [
-                path.resolve(process.cwd(), "cookies.txt"),
-                path.resolve(__dirname, "cookies.txt"),
-                path.resolve(__dirname, "../../cookies.txt"),
-                path.resolve(__dirname, "../../../cookies.txt"),
-            ];
-            for (const p of potentialPaths) {
-                if (fs.existsSync(p)) {
-                    cookiesPath = p;
-                    console.log(`🔑 Found cookies.txt at: ${p}`);
-                    break;
-                }
-            }
-        }
         // Configure cookies for play-dl if present
-        if (cookiesPath) {
+        if (cookieHeader) {
             try {
-                const cookieContent = fs.readFileSync(cookiesPath, "utf8");
-                const lines = cookieContent.split("\n");
-                const cookiesList = [];
-                for (let line of lines) {
-                    line = line.trim();
-                    if (!line || line.startsWith("#"))
-                        continue;
-                    const parts = line.split("\t");
-                    if (parts.length >= 7) {
-                        cookiesList.push(`${parts[5]}=${parts[6]}`);
+                const playdl = require("play-dl");
+                playdl.setToken({
+                    youtube: {
+                        cookie: cookieHeader
                     }
-                }
-                const cookieStr = cookiesList.join("; ");
-                if (cookieStr) {
-                    const playdl = require("play-dl");
-                    playdl.setToken({
-                        youtube: {
-                            cookie: cookieStr
-                        }
-                    });
-                    console.log("🔑 play-dl youtube cookies configured successfully!");
-                }
+                });
+                console.log("play-dl youtube cookies configured successfully!");
             }
             catch (err) {
                 console.error("Failed to configure play-dl cookies:", err.message);
@@ -463,8 +442,8 @@ Input: {input}`;
                 audioFormat: "mp3",
                 output: audioPath,
             };
-            if (cookiesPath) {
-                options.cookies = cookiesPath;
+            if (cookiesFilePath) {
+                options.cookies = cookiesFilePath;
             }
             await youtubedl(cleanVideoUrl, options);
             if (fs.existsSync(audioPath)) {
@@ -475,7 +454,7 @@ Input: {input}`;
             }
         }
         catch (e) {
-            errs.push(`yt-dlp-exec: ${e.message}`);
+            errs.push("yt-dlp-exec: " + e.message);
         }
         if (!downloaded) {
             // Fallback 1: youtube-dl-exec
@@ -486,8 +465,8 @@ Input: {input}`;
                     audioFormat: "mp3",
                     output: audioPath,
                 };
-                if (cookiesPath) {
-                    options.cookies = cookiesPath;
+                if (cookiesFilePath) {
+                    options.cookies = cookiesFilePath;
                 }
                 await fallbackDl(cleanVideoUrl, options);
                 if (fs.existsSync(audioPath)) {
@@ -498,7 +477,7 @@ Input: {input}`;
                 }
             }
             catch (e) {
-                errs.push(`youtube-dl-exec: ${e.message}`);
+                errs.push("youtube-dl-exec: " + e.message);
             }
         }
         if (!downloaded) {
@@ -521,12 +500,11 @@ Input: {input}`;
                 });
             }
             catch (e) {
-                errs.push(`play-dl: ${e.message}`);
+                errs.push("play-dl: " + e.message);
             }
         }
         if (!downloaded)
-            throw new Error(`Audio download failed: ${errs.join(" | ")}`);
-        // ✅ Upload local file to AssemblyAI
+            throw new Error("Audio download failed: " + errs.join(" | "));
         try {
             const client = new AssemblyAI({ apiKey: assemblyKey });
             const uploadedFile = await client.files.upload(audioPath);
@@ -536,11 +514,7 @@ Input: {input}`;
             return res.text || "";
         }
         finally {
-            // Always clean up local files
             fs.unlink(audioPath, () => { });
-            if (tempCookiesFile && fs.existsSync(tempCookiesFile)) {
-                fs.unlink(tempCookiesFile, () => { });
-            }
         }
     }
     // ─────────────────────────────────────────────────────────────
