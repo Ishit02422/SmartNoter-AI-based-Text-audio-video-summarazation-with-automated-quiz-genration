@@ -42,6 +42,9 @@ export interface IUser {
   phone?: string;
   bio?: string;
   location?: string;
+  gender?: string;
+  dob?: Date | string;
+  profession?: string;
   totalSummaries?: number;
 }
 export interface UserDefaults {
@@ -91,6 +94,9 @@ export class User implements IUser {
   phone?: string;
   bio?: string;
   location?: string;
+  gender?: string;
+  dob?: Date | string;
+  profession?: string;
   totalSummaries?: number;
 
   constructor(input?: IUser) {
@@ -139,6 +145,9 @@ export class User implements IUser {
     this.phone = input?.phone;
     this.bio = input?.bio;
     this.location = input?.location;
+    this.gender = input?.gender;
+    this.dob = input?.dob;
+    this.profession = input?.profession;
     this.totalSummaries = input?.totalSummaries;
   }
 

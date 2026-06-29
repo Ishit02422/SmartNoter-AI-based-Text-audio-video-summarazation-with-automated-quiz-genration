@@ -153,6 +153,18 @@ const user = new Schema<IUser>(
       type: String,
       default: "",
     },
+    gender: {
+      type: String,
+      default: "",
+    },
+    dob: {
+      type: Date,
+      default: null,
+    },
+    profession: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

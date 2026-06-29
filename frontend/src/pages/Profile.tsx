@@ -4,7 +4,8 @@ import api from '../api';
 import { 
     User, Mail, Camera, Save, Trash2, 
     LogOut, Shield, AlertCircle, CheckCircle2, 
-    X, Calendar, Zap, Clock, Phone, MapPin, Info
+    X, Calendar, Zap, Clock, Phone, MapPin, Info,
+    Briefcase
 } from 'lucide-react';
 
 const Profile = () => {
@@ -20,6 +21,9 @@ const Profile = () => {
         phone: '',
         bio: '',
         location: '',
+        gender: '',
+        dob: '',
+        profession: '',
     });
     
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +56,9 @@ const Profile = () => {
                 phone: res.data.phone || '',
                 bio: res.data.bio || '',
                 location: res.data.location || '',
+                gender: res.data.gender || '',
+                dob: res.data.dob ? new Date(res.data.dob).toISOString().split('T')[0] : '',
+                profession: res.data.profession || '',
             });
         } catch (error) {
             console.error('Failed to load profile', error);
@@ -358,6 +365,58 @@ const Profile = () => {
                                             placeholder="City, Country"
                                         />
                                         <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300 ml-1">Gender</label>
+                                    <div className="relative">
+                                        <select 
+                                            value={formData.gender}
+                                            onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                                            className="w-full px-5 py-4 bg-slate-950/50 border border-slate-800 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all font-medium shadow-inner appearance-none"
+                                        >
+                                            <option value="" className="bg-slate-900 text-slate-500">Select Gender</option>
+                                            <option value="Male" className="bg-slate-900 text-white">Male</option>
+                                            <option value="Female" className="bg-slate-900 text-white">Female</option>
+                                            <option value="Other" className="bg-slate-900 text-white">Other</option>
+                                        </select>
+                                        <User className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300 ml-1">Date of Birth</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="date"
+                                            value={formData.dob}
+                                            onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                                            className="w-full px-5 py-4 bg-slate-950/50 border border-slate-800 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all font-medium placeholder-slate-600 shadow-inner"
+                                        />
+                                        <Calendar className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300 ml-1">Profession / Role</label>
+                                    <div className="relative">
+                                        <select 
+                                            value={formData.profession}
+                                            onChange={(e) => setFormData({...formData, profession: e.target.value})}
+                                            className="w-full px-5 py-4 bg-slate-950/50 border border-slate-800 text-white rounded-2xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all font-medium shadow-inner appearance-none"
+                                        >
+                                            <option value="" className="bg-slate-900 text-slate-500">Select Profession</option>
+                                            <option value="Student" className="bg-slate-900 text-white">Student</option>
+                                            <option value="Content Creator" className="bg-slate-900 text-white">Content Creator</option>
+                                            <option value="Educator / Teacher" className="bg-slate-900 text-white">Educator / Teacher</option>
+                                            <option value="Developer / Professional" className="bg-slate-900 text-white">Developer / Professional</option>
+                                            <option value="Other" className="bg-slate-900 text-white">Other</option>
+                                        </select>
+                                        <Briefcase className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
                                     </div>
                                 </div>
                             </div>

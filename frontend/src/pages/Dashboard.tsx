@@ -169,10 +169,13 @@ const Dashboard = () => {
                     </p>
                     <div className="pt-2 flex flex-wrap gap-4">
                         <button 
-                            onClick={() => navigate('/video')} 
+                            onClick={() => {
+                                localStorage.removeItem('token');
+                                navigate('/');
+                            }} 
                             className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] border border-indigo-500/50"
                         >
-                            <Plus className="w-5 h-5" /> Create New Project
+                            <Plus className="w-5 h-5" /> Create New Account
                         </button>
                         <button 
                             onClick={() => navigate('/dashboard/pricing')} 

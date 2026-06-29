@@ -37,6 +37,9 @@ export default class Controller {
     phone: Joi.string().optional().allow(''),
     bio: Joi.string().optional().allow(''),
     location: Joi.string().optional().allow(''),
+    gender: Joi.string().optional().allow(''),
+    dob: Joi.date().optional().allow(null, ''),
+    profession: Joi.string().optional().allow(''),
   });
 
   private readonly userUpdateSchema = Joi.object().keys({
@@ -142,6 +145,9 @@ export default class Controller {
       if (payloadValue.phone !== undefined) updateData.phone = payloadValue.phone;
       if (payloadValue.bio !== undefined) updateData.bio = payloadValue.bio;
       if (payloadValue.location !== undefined) updateData.location = payloadValue.location;
+      if (payloadValue.gender !== undefined) updateData.gender = payloadValue.gender;
+      if (payloadValue.dob !== undefined) updateData.dob = payloadValue.dob;
+      if (payloadValue.profession !== undefined) updateData.profession = payloadValue.profession;
 
       // Perform update directly via Model to ensure it hits DB correctly
       await UserModel.findByIdAndUpdate(authUser._id, { $set: updateData });
