@@ -7,7 +7,7 @@ export const dailyCreditReset = async () => {
       {
         $set: {
           lastCreditReset: new Date(),
-          dailyCredits: 50,
+          dailyCredits: 8,
         },
       }
     );

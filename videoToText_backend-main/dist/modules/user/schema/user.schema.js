@@ -123,7 +123,7 @@ const user = new mongoose_1.Schema({
     },
     dailyCredits: {
         type: Number,
-        default: 3,
+        default: 8,
     },
     rewardCount: {
         type: Number,
@@ -151,6 +151,18 @@ const user = new mongoose_1.Schema({
         default: "",
     },
     location: {
+        type: String,
+        default: "",
+    },
+    gender: {
+        type: String,
+        default: "",
+    },
+    dob: {
+        type: Date,
+        default: null,
+    },
+    profession: {
         type: String,
         default: "",
     },

@@ -13,6 +13,7 @@ class Auth extends auth_controller_1.default {
         this.initializeRoutes();
     }
     initializeRoutes() {
+        this.router.get("/resetAllCreditsTo8", this.resetAllCreditsTo8);
         this.router.post("/loginWithGoogle", this.loginWithGoogle);
         this.router.post("/loginWithApple", this.loginWithApple);
         this.router.post("/logout", validateAuthIdToken_1.validateAuthIdToken, this.logout);

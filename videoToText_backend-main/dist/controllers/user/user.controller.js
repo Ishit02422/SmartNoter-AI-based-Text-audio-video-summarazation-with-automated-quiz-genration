@@ -49,6 +49,9 @@ class Controller {
             phone: joi_1.default.string().optional().allow(''),
             bio: joi_1.default.string().optional().allow(''),
             location: joi_1.default.string().optional().allow(''),
+            gender: joi_1.default.string().optional().allow(''),
+            dob: joi_1.default.date().optional().allow(null, ''),
+            profession: joi_1.default.string().optional().allow(''),
         });
         this.userUpdateSchema = joi_1.default.object().keys({
             profileImage: joi_1.default.string()
@@ -155,6 +158,12 @@ class Controller {
                     updateData.bio = payloadValue.bio;
                 if (payloadValue.location !== undefined)
                     updateData.location = payloadValue.location;
+                if (payloadValue.gender !== undefined)
+                    updateData.gender = payloadValue.gender;
+                if (payloadValue.dob !== undefined)
+                    updateData.dob = payloadValue.dob;
+                if (payloadValue.profession !== undefined)
+                    updateData.profession = payloadValue.profession;
                 // Perform update directly via Model to ensure it hits DB correctly
                 await schema_1.UserModel.findByIdAndUpdate(authUser._id, { $set: updateData });
                 const populatedUser = await (0, user_1.getPopulatedUserById)(authUser._id);

@@ -219,7 +219,7 @@ export default class Controller {
             ...authUser,
             premiumExpiryDate: expiredTime,
             isProUser: true,
-            dailyCredits: 50,
+            dailyCredits: 8,
             premiumType: payloadValue.subscriptionType,
           })
         );

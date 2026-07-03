@@ -50,6 +50,9 @@ class User {
         this.phone = input === null || input === void 0 ? void 0 : input.phone;
         this.bio = input === null || input === void 0 ? void 0 : input.bio;
         this.location = input === null || input === void 0 ? void 0 : input.location;
+        this.gender = input === null || input === void 0 ? void 0 : input.gender;
+        this.dob = input === null || input === void 0 ? void 0 : input.dob;
+        this.profession = input === null || input === void 0 ? void 0 : input.profession;
         this.totalSummaries = input === null || input === void 0 ? void 0 : input.totalSummaries;
     }
     toJSON() {

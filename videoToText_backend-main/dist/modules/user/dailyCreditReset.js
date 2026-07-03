@@ -7,7 +7,7 @@ const dailyCreditReset = async () => {
         await schema_1.UserModel.updateMany({ isProUser: true, isPurchased: true }, {
             $set: {
                 lastCreditReset: new Date(),
-                dailyCredits: 50,
+                dailyCredits: 8,
             },
         });
         // Disabled free user reset to enforce strict 3 uses lifetime limit

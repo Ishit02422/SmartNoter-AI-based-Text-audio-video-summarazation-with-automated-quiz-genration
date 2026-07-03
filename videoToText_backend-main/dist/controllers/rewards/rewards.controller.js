@@ -116,8 +116,10 @@ class Controller {
                 await (0, user_1.updateUserByQry)({
                     query: { _id: authUser._id },
                     update: {
-                        dailyCredits: creditForUseCodeUser,
-                        rewardCount: creditForUseCodeUser,
+                        $inc: {
+                            dailyCredits: creditForUseCodeUser,
+                            rewardCount: creditForUseCodeUser,
+                        },
                     },
                 });
                 res.status(200).json({ message: "Referral submitted successfully" });

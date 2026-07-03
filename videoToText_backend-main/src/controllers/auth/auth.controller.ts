@@ -34,12 +34,12 @@ import { checkTextSummaryIsExistById } from "../../modules/generateSummaryFromTe
 import { checkIfExistSummaryWithUserid } from "../../modules/generateSummaryFromText/checkIfExistSummaryWithUserid";
 
 export default class Controller {
-  public readonly resetAllCreditsTo50 = async (req: Request, res: Response) => {
+  public readonly resetAllCreditsTo8 = async (req: Request, res: Response) => {
     try {
-      const result = await UserModel.updateMany({}, { $set: { dailyCredits: 50 } });
+      const result = await UserModel.updateMany({}, { $set: { dailyCredits: 8 } });
       return res.status(200).json({
         success: true,
-        message: `Successfully reset credits to 50 for ${result.modifiedCount} users.`,
+        message: `Successfully reset credits to 8 for ${result.modifiedCount} users.`,
       });
     } catch (error) {
       return res.status(500).json({
@@ -456,7 +456,7 @@ export default class Controller {
               isGoogleLogin: true,
               dailyCredits: guestUser && !guestUser.isTransferred
                 ? guestUser.dailyCredits
-                : 50,
+                : 8,
               deviceId: "",
             };
 
@@ -997,7 +997,7 @@ export default class Controller {
               isAppleLogin: true,
               dailyCredits: guestUser && !guestUser.isTransferred
                 ? guestUser.dailyCredits
-                : 50,
+                : 8,
 
               // isEmailVerified: true,
               deviceId: "",

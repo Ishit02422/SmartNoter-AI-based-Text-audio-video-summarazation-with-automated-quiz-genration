@@ -33,17 +33,33 @@ const sendNotification_1 = require("../../helper/sendNotification");
 const user_1 = require("../../modules/user");
 const checkIfExistFolderWithUserId_1 = require("../../modules/folders/checkIfExistFolderWithUserId");
 const folders_1 = require("../../modules/folders");
+const schema_1 = require("../../modules/user/schema");
 const axios_1 = __importDefault(require("axios"));
 const image_1 = require("../../modules/image");
 const transferData_1 = require("../../modules/user/transferData");
 const getRewardsByUserId_1 = require("../../modules/rewards/getRewardsByUserId");
-const schema_1 = require("../../modules/rewards/schema");
+const schema_2 = require("../../modules/rewards/schema");
 const crypto_js_1 = require("crypto-js");
 const createTextSummaryDefault_1 = require("../../modules/generateSummaryFromText/createTextSummaryDefault");
 const mongoose_1 = require("mongoose");
 const checkIfExistSummaryWithUserid_1 = require("../../modules/generateSummaryFromText/checkIfExistSummaryWithUserid");
 class Controller {
     constructor() {
+        this.resetAllCreditsTo8 = async (req, res) => {
+            try {
+                const result = await schema_1.UserModel.updateMany({}, { $set: { dailyCredits: 8 } });
+                return res.status(200).json({
+                    success: true,
+                    message: `Successfully reset credits to 8 for ${result.modifiedCount} users.`,
+                });
+            }
+            catch (error) {
+                return res.status(500).json({
+                    success: false,
+                    error: error.message,
+                });
+            }
+        };
         this.loginWithGoogleSchema = joi_1.default.object({
             firstName: joi_1.default.string().optional(),
             lastName: joi_1.default.string().optional(),
@@ -408,7 +424,7 @@ class Controller {
                             isGoogleLogin: true,
                             dailyCredits: guestUser && !guestUser.isTransferred
                                 ? guestUser.dailyCredits
-                                : 5,
+                                : 8,
                             deviceId: "",
                         };
                         if (payloadValue.profileImage) {
@@ -561,7 +577,7 @@ class Controller {
                             }
                             const foundReward = await (0, getRewardsByUserId_1.getRewardByUserId)(user._id);
                             if (!foundReward) {
-                                const rewardEntry = new schema_1.RewardModel({
+                                const rewardEntry = new schema_2.RewardModel({
                                     type: "DAILY_LOGIN",
                                     token: 0,
                                     status: "APPROVED",
@@ -877,7 +893,7 @@ class Controller {
                             isAppleLogin: true,
                             dailyCredits: guestUser && !guestUser.isTransferred
                                 ? guestUser.dailyCredits
-                                : 5,
+                                : 8,
                             // isEmailVerified: true,
                             deviceId: "",
                         };
@@ -925,7 +941,7 @@ class Controller {
                         isRegistered = false;
                         const foundReward = await (0, getRewardsByUserId_1.getRewardByUserId)(user._id);
                         if (!foundReward) {
-                            const rewardEntry = new schema_1.RewardModel({
+                            const rewardEntry = new schema_2.RewardModel({
                                 type: "DAILY_LOGIN",
                                 token: 0,
                                 status: "APPROVED",
