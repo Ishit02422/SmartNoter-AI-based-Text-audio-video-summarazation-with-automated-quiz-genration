@@ -94,8 +94,6 @@ export default class Controller {
   private docs: Document[] = [];
 
   private initializeRetrievalChain = async (payloadValue) => {
-    const { chain } = await this.createChain();
-    
     // Create documents from summary context
     const docs = [
       new Document({ pageContent: JSON.stringify(this.summary?.aiResponse || this.summary) }),
@@ -119,12 +117,36 @@ export default class Controller {
     // Create a direct retrieval chain that doesn't need embeddings
     this.retrievalChain = {
       invoke: async (input: { input: string; chat_history: any[] }) => {
-        const answer = await chain.invoke({
-          input: input.input,
-          chat_history: input.chat_history,
-          context: this.docs,
-        });
-        return { answer };
+        let attempts = 0;
+        const keysStr = process.env.GOOGLE_API_KEY || "";
+        const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+        while (attempts < Math.max(3, keys.length)) {
+          try {
+            const keyIndex = attempts % keys.length;
+            const llm = await getLlm(keyIndex);
+            const prompt = ChatPromptTemplate.fromMessages([
+              [
+                "system",
+                "You are an AI assistant. Use the following context to answer: {context}",
+              ],
+              new MessagesPlaceholder("chat_history"),
+              ["user", "{input}"],
+            ]);
+            const chain = await createStuffDocumentsChain({ llm, prompt });
+            const answer = await chain.invoke({
+              input: input.input,
+              chat_history: input.chat_history,
+              context: this.docs,
+            });
+            return { answer };
+          } catch (e: any) {
+            attempts++;
+            console.log(`Gemini chat error (attempt ${attempts}):`, e.message);
+            if (attempts >= Math.max(3, keys.length)) throw e;
+            await new Promise(r => setTimeout(r, 1000 * attempts));
+          }
+        }
+        throw new Error("Failed to process Gemini chat invoke request.");
       },
     };
 

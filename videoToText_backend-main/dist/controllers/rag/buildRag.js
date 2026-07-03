@@ -687,14 +687,17 @@ Input: {input}`;
         const splitter = new text_splitter_1.CharacterTextSplitter({ chunkSize: 2000, chunkOverlap: 100 });
         const splitDocs = await splitter.splitDocuments(docs);
         const prompt = prompts_1.ChatPromptTemplate.fromTemplate(this.getSystemPrompt());
-        const llm = await (0, llm_1.getLlm)();
-        const mainChain = await (0, combine_documents_1.createStuffDocumentsChain)({ llm, prompt });
-        const chain = mainChain.pipe(new output_parsers_1.StringOutputParser());
         const retrievalChain = {
             stream: async function* (input) {
                 let attempts = 0;
-                while (attempts < 3) {
+                const keysStr = process.env.GOOGLE_API_KEY || "";
+                const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+                while (attempts < Math.max(3, keys.length)) {
                     try {
+                        const keyIndex = attempts % keys.length;
+                        const llm = await (0, llm_1.getLlm)(keyIndex);
+                        const mainChain = await (0, combine_documents_1.createStuffDocumentsChain)({ llm, prompt });
+                        const chain = mainChain.pipe(new output_parsers_1.StringOutputParser());
                         const result = await chain.stream({ input: input.input, context: splitDocs });
                         for await (const chunk of result)
                             yield { answer: chunk };
@@ -703,25 +706,31 @@ Input: {input}`;
                     catch (e) {
                         attempts++;
                         console.log(`Gemini stream error (attempt ${attempts}):`, e.message);
-                        if (attempts >= 3)
+                        if (attempts >= Math.max(3, keys.length))
                             throw e;
-                        await new Promise(r => setTimeout(r, 2000 * attempts));
+                        await new Promise(r => setTimeout(r, 1000 * attempts));
                     }
                 }
             },
             invoke: async (input) => {
                 let attempts = 0;
-                while (attempts < 3) {
+                const keysStr = process.env.GOOGLE_API_KEY || "";
+                const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+                while (attempts < Math.max(3, keys.length)) {
                     try {
+                        const keyIndex = attempts % keys.length;
+                        const llm = await (0, llm_1.getLlm)(keyIndex);
+                        const mainChain = await (0, combine_documents_1.createStuffDocumentsChain)({ llm, prompt });
+                        const chain = mainChain.pipe(new output_parsers_1.StringOutputParser());
                         const answer = await chain.invoke({ input: input.input, context: splitDocs });
                         return { answer };
                     }
                     catch (e) {
                         attempts++;
                         console.log(`Gemini invoke error (attempt ${attempts}):`, e.message);
-                        if (attempts >= 3)
+                        if (attempts >= Math.max(3, keys.length))
                             throw e;
-                        await new Promise(r => setTimeout(r, 2000 * attempts));
+                        await new Promise(r => setTimeout(r, 1000 * attempts));
                     }
                 }
             },

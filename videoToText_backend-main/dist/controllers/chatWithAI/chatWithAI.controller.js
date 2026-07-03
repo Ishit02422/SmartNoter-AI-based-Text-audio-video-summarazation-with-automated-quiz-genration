@@ -77,7 +77,6 @@ class Controller {
         this.docs = [];
         this.initializeRetrievalChain = async (payloadValue) => {
             var _a, _b;
-            const { chain } = await this.createChain();
             // Create documents from summary context
             const docs = [
                 new documents_1.Document({ pageContent: JSON.stringify(((_a = this.summary) === null || _a === void 0 ? void 0 : _a.aiResponse) || this.summary) }),
@@ -99,12 +98,38 @@ class Controller {
             // Create a direct retrieval chain that doesn't need embeddings
             this.retrievalChain = {
                 invoke: async (input) => {
-                    const answer = await chain.invoke({
-                        input: input.input,
-                        chat_history: input.chat_history,
-                        context: this.docs,
-                    });
-                    return { answer };
+                    let attempts = 0;
+                    const keysStr = process.env.GOOGLE_API_KEY || "";
+                    const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+                    while (attempts < Math.max(3, keys.length)) {
+                        try {
+                            const keyIndex = attempts % keys.length;
+                            const llm = await (0, llm_1.getLlm)(keyIndex);
+                            const prompt = prompts_1.ChatPromptTemplate.fromMessages([
+                                [
+                                    "system",
+                                    "You are an AI assistant. Use the following context to answer: {context}",
+                                ],
+                                new prompts_1.MessagesPlaceholder("chat_history"),
+                                ["user", "{input}"],
+                            ]);
+                            const chain = await (0, combine_documents_1.createStuffDocumentsChain)({ llm, prompt });
+                            const answer = await chain.invoke({
+                                input: input.input,
+                                chat_history: input.chat_history,
+                                context: this.docs,
+                            });
+                            return { answer };
+                        }
+                        catch (e) {
+                            attempts++;
+                            console.log(`Gemini chat error (attempt ${attempts}):`, e.message);
+                            if (attempts >= Math.max(3, keys.length))
+                                throw e;
+                            await new Promise(r => setTimeout(r, 1000 * attempts));
+                        }
+                    }
+                    throw new Error("Failed to process Gemini chat invoke request.");
                 },
             };
             this.isInitialized = true;

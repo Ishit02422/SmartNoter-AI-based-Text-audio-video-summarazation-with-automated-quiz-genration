@@ -660,37 +660,48 @@ Input: {input}`;
     const splitter = new CharacterTextSplitter({ chunkSize: 2000, chunkOverlap: 100 });
     const splitDocs = await splitter.splitDocuments(docs);
     const prompt = ChatPromptTemplate.fromTemplate(this.getSystemPrompt());
-    const llm = await getLlm();
-    const mainChain = await createStuffDocumentsChain({ llm, prompt });
-    const chain = mainChain.pipe(new StringOutputParser());
 
     const retrievalChain = {
       stream: async function* (input: { input: string }) {
         let attempts = 0;
-        while (attempts < 3) {
+        const keysStr = process.env.GOOGLE_API_KEY || "";
+        const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+        while (attempts < Math.max(3, keys.length)) {
           try {
+            const keyIndex = attempts % keys.length;
+            const llm = await getLlm(keyIndex);
+            const mainChain = await createStuffDocumentsChain({ llm, prompt });
+            const chain = mainChain.pipe(new StringOutputParser());
+
             const result = await chain.stream({ input: input.input, context: splitDocs });
             for await (const chunk of result) yield { answer: chunk };
             return;
           } catch (e: any) {
             attempts++;
             console.log(`Gemini stream error (attempt ${attempts}):`, e.message);
-            if (attempts >= 3) throw e;
-            await new Promise(r => setTimeout(r, 2000 * attempts));
+            if (attempts >= Math.max(3, keys.length)) throw e;
+            await new Promise(r => setTimeout(r, 1000 * attempts));
           }
         }
       },
       invoke: async (input: { input: string }) => {
         let attempts = 0;
-        while (attempts < 3) {
+        const keysStr = process.env.GOOGLE_API_KEY || "";
+        const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+        while (attempts < Math.max(3, keys.length)) {
           try {
+            const keyIndex = attempts % keys.length;
+            const llm = await getLlm(keyIndex);
+            const mainChain = await createStuffDocumentsChain({ llm, prompt });
+            const chain = mainChain.pipe(new StringOutputParser());
+
             const answer = await chain.invoke({ input: input.input, context: splitDocs });
             return { answer };
           } catch (e: any) {
             attempts++;
             console.log(`Gemini invoke error (attempt ${attempts}):`, e.message);
-            if (attempts >= 3) throw e;
-            await new Promise(r => setTimeout(r, 2000 * attempts));
+            if (attempts >= Math.max(3, keys.length)) throw e;
+            await new Promise(r => setTimeout(r, 1000 * attempts));
           }
         }
       },

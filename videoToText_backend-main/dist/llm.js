@@ -8,10 +8,13 @@ const google_genai_1 = require("@langchain/google-genai");
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 dotenv_1.default.config({ path: path_1.default.join(__dirname, "../.env") });
-const getLlm = async () => {
+const getLlm = async (keyIndex = 0) => {
+    const keysStr = process.env.GOOGLE_API_KEY || "";
+    const keys = keysStr.split(",").map((k) => k.trim()).filter(Boolean);
+    const selectedKey = keys[keyIndex % keys.length] || "";
     return new google_genai_1.ChatGoogleGenerativeAI({
         model: "gemini-2.5-flash",
-        apiKey: process.env.GOOGLE_API_KEY,
+        apiKey: selectedKey,
         maxRetries: 2,
     });
 };
