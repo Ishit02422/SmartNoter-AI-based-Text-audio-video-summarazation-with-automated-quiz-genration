@@ -13,6 +13,11 @@
 
 **A production-grade full-stack AI platform that converts YouTube videos, audio files, PDFs, web pages, and raw text into intelligent summaries, quizzes, flashcards, and mind maps.**
 
+### 🌐 Live Demo
+
+[![Frontend](https://img.shields.io/badge/🚀%20Live%20App-smartnoter--frontend.onrender.com-brightgreen?style=for-the-badge)](https://smartnoter-frontend.onrender.com)
+[![Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-smartnoter--ai.onrender.com-blue?style=for-the-badge)](https://smartnoter-ai-based-text-audio-video.onrender.com)
+
 </div>
 
 ---
@@ -36,8 +41,8 @@
 
 SmartNoter is an intelligent note-taking and learning platform designed for students, professionals, and content creators. It is a **full-stack application** consisting of:
 
-- **Backend** — Node.js + TypeScript REST API orchestrating multiple AI pipelines
-- **Frontend** — React + TypeScript web application
+- **Frontend (Live)** → [https://smartnoter-frontend.onrender.com](https://smartnoter-frontend.onrender.com)
+- **Backend API (Live)** → [https://smartnoter-ai-based-text-audio-video.onrender.com](https://smartnoter-ai-based-text-audio-video.onrender.com)
 
 The system uses **Google Gemini 2.5 Flash** as the primary LLM, backed by **LangChain** for RAG (Retrieval-Augmented Generation) pipelines, **AssemblyAI** for audio transcription, **MongoDB** for persistence, and **Redis** for caching and rate limiting.
 
