@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const uri = 'mongodb+srv://22bmiit022_db_user:M4ZZ8UxrezI4n2Cf@cluster0.f9mupon.mongodb.net/VideoToText?retryWrites=true&w=majority';
+const uri = 'mongodb+srv://22bmiit022_db_user:SmartNoterPass123@cluster0.f9mupon.mongodb.net/VideoToText?retryWrites=true&w=majority';
 
 async function run() {
   try {

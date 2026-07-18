@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const mongoUri = 'mongodb://22bmiit022_db_user:M4ZZ8UxrezI4n2Cf@cluster0-shard-00-00.f9mupon.mongodb.net:27017,cluster0-shard-00-01.f9mupon.mongodb.net:27017,cluster0-shard-00-02.f9mupon.mongodb.net:27017/VideoToText?ssl=true&replicaSet=atlas-9x1vsz-shard-0&authSource=admin&retryWrites=true&w=majority';
-const backupUri = 'mongodb+srv://22bmiit022_db_user:M4ZZ8UxrezI4n2Cf@cluster0.f9mupon.mongodb.net/VideoToText?retryWrites=true&w=majority';
+const mongoUri = 'mongodb://22bmiit022_db_user:SmartNoterPass123@cluster0-shard-00-00.f9mupon.mongodb.net:27017,cluster0-shard-00-01.f9mupon.mongodb.net:27017,cluster0-shard-00-02.f9mupon.mongodb.net:27017/VideoToText?ssl=true&replicaSet=atlas-9x1vsz-shard-0&authSource=admin&retryWrites=true&w=majority';
+const backupUri = 'mongodb+srv://22bmiit022_db_user:SmartNoterPass123@cluster0.f9mupon.mongodb.net/VideoToText?retryWrites=true&w=majority';
 
 async function run() {
   try {

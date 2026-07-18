@@ -1,0 +1,1 @@
+SmartNoter is an AI-powered notes and summarization tool. It helps Post-Graduate and Undergraduate students to summarize YouTube videos, audio files, PDFs, and website articles. It also generates automated quizzes and interactive mindmaps to make learning faster and more effective.
