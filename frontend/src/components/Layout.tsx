@@ -3,6 +3,7 @@ import {
     Home, Video, FileText, CheckSquare, Brain, 
     MessageSquare, Type, LogOut, ChevronRight, Menu, User, Library, Globe, CreditCard
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
