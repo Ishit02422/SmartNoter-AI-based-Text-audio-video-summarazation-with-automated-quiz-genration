@@ -9,8 +9,10 @@ import {
     CheckSquare, Library
 } from 'lucide-react';
 import { useSummary } from '../context/SummaryContext';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
+    const { logout } = useAuth();
     const [profile, setProfile] = useState<any>(null);
     const [history, setHistory] = useState<any[]>([]);
     const [allHistory, setAllHistory] = useState<any[]>([]);
@@ -170,7 +172,7 @@ const Dashboard = () => {
                     <div className="pt-2 flex flex-wrap gap-4">
                         <button 
                             onClick={() => {
-                                localStorage.removeItem('token');
+                                logout();
                                 navigate('/');
                             }} 
                             className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] border border-indigo-500/50"

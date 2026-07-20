@@ -8,7 +8,10 @@ import {
     Briefcase
 } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 const Profile = () => {
+    const { logout } = useAuth();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -117,8 +120,7 @@ const Profile = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        logout();
         navigate('/login');
     };
 

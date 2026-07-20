@@ -3,12 +3,12 @@ import {
     Home, Video, FileText, CheckSquare, Brain, 
     MessageSquare, Type, LogOut, ChevronRight, Menu, User, Library, Globe, CreditCard
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const token = localStorage.getItem('token');
+    const { token, logout } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
 
@@ -18,7 +18,7 @@ const Layout = () => {
     }, [location.pathname]); // Re-check on navigation
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        logout();
         navigate('/');
     };
 
