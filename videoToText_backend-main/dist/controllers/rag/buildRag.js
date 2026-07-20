@@ -133,25 +133,31 @@ Input: {input}`;
                 errs.push("[2] " + e.message);
                 console.log("Method 2 err (youtubei.js):", e.message);
             }
-            // 3. kome.ai free API
+            // 3. Supadata.ai free transcript API (handles YouTube from their servers — no IP block)
             try {
-                console.log("Method 3: kome.ai...");
-                const res = await axios_1.default.post("https://api.kome.ai/api/tools/youtube-transcripts", { video_id: videoId, force_fetch: false }, { timeout: 20000, headers: { "Content-Type": "application/json" } });
-                const raw = (_f = res.data) === null || _f === void 0 ? void 0 : _f.transcript;
-                const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.map((x) => x.text || x).join(" ") : "";
-                if (text.length > 20) {
-                    console.log("Method 3 success: " + text.length + " chars");
-                    return text;
+                console.log("Method 3: Supadata.ai API...");
+                const supadataKey = process.env.SUPADATA_API_KEY;
+                const supadataHeaders = { "Content-Type": "application/json" };
+                if (supadataKey)
+                    supadataHeaders["x-api-key"] = supadataKey;
+                const supadataRes = await axios_1.default.get(`https://api.supadata.ai/v1/youtube/transcript?videoId=${videoId}&text=true`, { timeout: 25000, headers: supadataHeaders });
+                const raw3 = supadataRes.data;
+                const text3 = typeof raw3 === "string" ? raw3 : ((raw3 === null || raw3 === void 0 ? void 0 : raw3.content) || (raw3 === null || raw3 === void 0 ? void 0 : raw3.transcript) || (raw3 === null || raw3 === void 0 ? void 0 : raw3.text) || "");
+                if (text3.length > 20) {
+                    console.log("Method 3 success (Supadata): " + text3.length + " chars");
+                    return text3;
                 }
             }
             catch (e) {
                 errs.push("[3] " + e.message);
-                console.log("Method 3 err:", e.message);
+                console.log("Method 3 err (Supadata):", e.message);
             }
-            // 4. Direct HTTP scrape
+            // 4. kome.ai free API
             try {
-                console.log("Method 4: Direct caption scrape...");
-                const text = await this.scrapeYouTubeCaptions(videoId, cookieHeader);
+                console.log("Method 4: kome.ai...");
+                const res = await axios_1.default.post("https://api.kome.ai/api/tools/youtube-transcripts", { video_id: videoId, force_fetch: false }, { timeout: 20000, headers: { "Content-Type": "application/json" } });
+                const raw = (_f = res.data) === null || _f === void 0 ? void 0 : _f.transcript;
+                const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.map((x) => x.text || x).join(" ") : "";
                 if (text.length > 20) {
                     console.log("Method 4 success: " + text.length + " chars");
                     return text;
@@ -161,10 +167,10 @@ Input: {input}`;
                 errs.push("[4] " + e.message);
                 console.log("Method 4 err:", e.message);
             }
-            // 5. Audio - AssemblyAI
+            // 5. Direct HTTP scrape
             try {
-                console.log("Method 5: Audio to AssemblyAI...");
-                const text = await this.transcribeAudio(videoUrl, cookieHeader, cookiesFilePath);
+                console.log("Method 5: Direct caption scrape...");
+                const text = await this.scrapeYouTubeCaptions(videoId, cookieHeader);
                 if (text.length > 20) {
                     console.log("Method 5 success: " + text.length + " chars");
                     return text;
@@ -173,6 +179,19 @@ Input: {input}`;
             catch (e) {
                 errs.push("[5] " + e.message);
                 console.log("Method 5 err:", e.message);
+            }
+            // 6. Audio - AssemblyAI
+            try {
+                console.log("Method 6: Audio to AssemblyAI...");
+                const text = await this.transcribeAudio(videoUrl, cookieHeader, cookiesFilePath);
+                if (text.length > 20) {
+                    console.log("Method 6 success: " + text.length + " chars");
+                    return text;
+                }
+            }
+            catch (e) {
+                errs.push("[6] " + e.message);
+                console.log("Method 6 err:", e.message);
             }
             throw new Error("All methods failed:\n" + errs.join("\n"));
         }
