@@ -75,31 +75,54 @@ Input: {input}`;
         if (text.length > 20) { console.log("Method 1 success: " + text.length + " chars"); return text; }
       } catch (e: any) { errs.push("[1] " + e.message); console.log("Method 1 err:", e.message); }
 
-      // 2. kome.ai free API
+      // 2. youtubei.js (Innertube API — works for geoblocked/region-restricted videos)
       try {
-        console.log("Method 2: kome.ai...");
+        console.log("Method 2: youtubei.js (Innertube)...");
+        const { Innertube } = require("youtubei.js");
+        const youtube = await Innertube.create({ retrieve_player: false });
+        const info = await youtube.getInfo(videoId);
+        const transcriptData = await info.getTranscript();
+        const segments: string[] = [];
+        const body = transcriptData?.transcript?.content?.body;
+        if (body) {
+          const initialSeg = body.initial_segments || [];
+          for (const seg of initialSeg) {
+            const snippet = seg?.snippet;
+            if (snippet) {
+              const txt = typeof snippet === "string" ? snippet : snippet?.text ?? snippet?.runs?.map((r: any) => r.text).join("") ?? "";
+              if (txt) segments.push(txt.replace(/\n/g, " "));
+            }
+          }
+        }
+        const text = segments.join(" ").trim();
+        if (text.length > 20) { console.log("Method 2 success (youtubei.js): " + text.length + " chars"); return text; }
+      } catch (e: any) { errs.push("[2] " + e.message); console.log("Method 2 err (youtubei.js):", e.message); }
+
+      // 3. kome.ai free API
+      try {
+        console.log("Method 3: kome.ai...");
         const res = await axios.post("https://api.kome.ai/api/tools/youtube-transcripts",
           { video_id: videoId, force_fetch: false },
           { timeout: 20000, headers: { "Content-Type": "application/json" } }
         );
         const raw = res.data?.transcript;
         const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.map((x: any) => x.text || x).join(" ") : "";
-        if (text.length > 20) { console.log("Method 2 success: " + text.length + " chars"); return text; }
-      } catch (e: any) { errs.push("[2] " + e.message); console.log("Method 2 err:", e.message); }
-
-      // 3. Direct HTTP scrape
-      try {
-        console.log("Method 3: Direct caption scrape...");
-        const text = await this.scrapeYouTubeCaptions(videoId, cookieHeader);
         if (text.length > 20) { console.log("Method 3 success: " + text.length + " chars"); return text; }
       } catch (e: any) { errs.push("[3] " + e.message); console.log("Method 3 err:", e.message); }
 
-      // 4. Audio - AssemblyAI
+      // 4. Direct HTTP scrape
       try {
-        console.log("Method 4: Audio to AssemblyAI...");
-        const text = await this.transcribeAudio(videoUrl, cookieHeader, cookiesFilePath);
+        console.log("Method 4: Direct caption scrape...");
+        const text = await this.scrapeYouTubeCaptions(videoId, cookieHeader);
         if (text.length > 20) { console.log("Method 4 success: " + text.length + " chars"); return text; }
       } catch (e: any) { errs.push("[4] " + e.message); console.log("Method 4 err:", e.message); }
+
+      // 5. Audio - AssemblyAI
+      try {
+        console.log("Method 5: Audio to AssemblyAI...");
+        const text = await this.transcribeAudio(videoUrl, cookieHeader, cookiesFilePath);
+        if (text.length > 20) { console.log("Method 5 success: " + text.length + " chars"); return text; }
+      } catch (e: any) { errs.push("[5] " + e.message); console.log("Method 5 err:", e.message); }
 
       throw new Error("All methods failed:\n" + errs.join("\n"));
     } finally {
