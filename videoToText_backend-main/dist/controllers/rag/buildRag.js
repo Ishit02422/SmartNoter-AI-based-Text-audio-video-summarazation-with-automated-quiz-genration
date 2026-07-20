@@ -261,7 +261,14 @@ Input: {input}`;
         if (cookieHeader) {
             pageHdr["Cookie"] = cookieHeader;
         }
-        const pageRes = await axios_1.default.get(`https://www.youtube.com/watch?v=${videoId}&hl=en`, { headers: pageHdr, timeout: 20000, responseType: "text" });
+        const axiosConfig = { headers: pageHdr, timeout: 20000, responseType: "text" };
+        if (process.env.YOUTUBE_PROXY) {
+            const { HttpProxyAgent } = require("http-proxy-agent");
+            const { HttpsProxyAgent } = require("https-proxy-agent");
+            axiosConfig.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+            axiosConfig.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+        }
+        const pageRes = await axios_1.default.get(`https://www.youtube.com/watch?v=${videoId}&hl=en`, axiosConfig);
         const html = pageRes.data;
         const setCookies = pageRes.headers["set-cookie"] || [];
         const responseCookieStr = setCookies.map((c) => c.split(";")[0]).join("; ");
@@ -312,7 +319,14 @@ Input: {input}`;
             .filter(Boolean).join(" ").trim();
         // Try JSON3 — default responseType so axios auto-decompresses
         try {
-            const r = await axios_1.default.get(track.baseUrl + "&fmt=json3", { headers: fetchHdr, timeout: 15000 });
+            const json3Config = { headers: fetchHdr, timeout: 15000 };
+            if (process.env.YOUTUBE_PROXY) {
+                const { HttpProxyAgent } = require("http-proxy-agent");
+                const { HttpsProxyAgent } = require("https-proxy-agent");
+                json3Config.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+                json3Config.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+            }
+            const r = await axios_1.default.get(track.baseUrl + "&fmt=json3", json3Config);
             const data = r.data;
             console.log("  JSON3: typeof=" + (typeof data) + ", events=" + ((_b = (_a = data === null || data === void 0 ? void 0 : data.events) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : "N/A"));
             if (Array.isArray(data === null || data === void 0 ? void 0 : data.events) && data.events.length > 0) {
@@ -330,7 +344,14 @@ Input: {input}`;
         }
         // Try XML
         try {
-            const r = await axios_1.default.get(track.baseUrl, { headers: fetchHdr, responseType: "text", timeout: 15000 });
+            const xmlConfig = { headers: fetchHdr, responseType: "text", timeout: 15000 };
+            if (process.env.YOUTUBE_PROXY) {
+                const { HttpProxyAgent } = require("http-proxy-agent");
+                const { HttpsProxyAgent } = require("https-proxy-agent");
+                xmlConfig.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+                xmlConfig.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+            }
+            const r = await axios_1.default.get(track.baseUrl, xmlConfig);
             const xml = r.data;
             console.log("  XML: " + ((_c = xml === null || xml === void 0 ? void 0 : xml.length) !== null && _c !== void 0 ? _c : 0) + " chars");
             const matches = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/gi)];
@@ -477,6 +498,9 @@ Input: {input}`;
             if (cookiesFilePath) {
                 options.cookies = cookiesFilePath;
             }
+            if (process.env.YOUTUBE_PROXY) {
+                options.proxy = process.env.YOUTUBE_PROXY;
+            }
             await youtubedl(cleanVideoUrl, options);
             if (fs.existsSync(audioPath)) {
                 downloaded = true;
@@ -499,6 +523,9 @@ Input: {input}`;
                 };
                 if (cookiesFilePath) {
                     options.cookies = cookiesFilePath;
+                }
+                if (process.env.YOUTUBE_PROXY) {
+                    options.proxy = process.env.YOUTUBE_PROXY;
                 }
                 await fallbackDl(cleanVideoUrl, options);
                 if (fs.existsSync(audioPath)) {

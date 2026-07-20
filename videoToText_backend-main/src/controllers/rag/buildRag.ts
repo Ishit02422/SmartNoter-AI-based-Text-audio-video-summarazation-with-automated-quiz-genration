@@ -222,9 +222,17 @@ Input: {input}`;
       pageHdr["Cookie"] = cookieHeader;
     }
 
+    const axiosConfig: any = { headers: pageHdr, timeout: 20000, responseType: "text" };
+    if (process.env.YOUTUBE_PROXY) {
+      const { HttpProxyAgent } = require("http-proxy-agent");
+      const { HttpsProxyAgent } = require("https-proxy-agent");
+      axiosConfig.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+      axiosConfig.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+    }
+
     const pageRes = await axios.get(
       `https://www.youtube.com/watch?v=${videoId}&hl=en`,
-      { headers: pageHdr, timeout: 20000, responseType: "text" }
+      axiosConfig
     );
     const html: string = pageRes.data;
     const setCookies: string[] = (pageRes.headers["set-cookie"] as string[] | undefined) || [];
@@ -274,7 +282,14 @@ Input: {input}`;
 
     // Try JSON3 — default responseType so axios auto-decompresses
     try {
-      const r = await axios.get(track.baseUrl + "&fmt=json3", { headers: fetchHdr, timeout: 15000 });
+      const json3Config: any = { headers: fetchHdr, timeout: 15000 };
+      if (process.env.YOUTUBE_PROXY) {
+        const { HttpProxyAgent } = require("http-proxy-agent");
+        const { HttpsProxyAgent } = require("https-proxy-agent");
+        json3Config.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+        json3Config.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+      }
+      const r = await axios.get(track.baseUrl + "&fmt=json3", json3Config);
       const data = r.data;
       console.log("  JSON3: typeof=" + (typeof data) + ", events=" + (data?.events?.length ?? "N/A"));
       if (Array.isArray(data?.events) && data.events.length > 0) {
@@ -291,7 +306,14 @@ Input: {input}`;
 
     // Try XML
     try {
-      const r = await axios.get(track.baseUrl, { headers: fetchHdr, responseType: "text", timeout: 15000 });
+      const xmlConfig: any = { headers: fetchHdr, responseType: "text", timeout: 15000 };
+      if (process.env.YOUTUBE_PROXY) {
+        const { HttpProxyAgent } = require("http-proxy-agent");
+        const { HttpsProxyAgent } = require("https-proxy-agent");
+        xmlConfig.httpAgent = new HttpProxyAgent(process.env.YOUTUBE_PROXY);
+        xmlConfig.httpsAgent = new HttpsProxyAgent(process.env.YOUTUBE_PROXY);
+      }
+      const r = await axios.get(track.baseUrl, xmlConfig);
       const xml: string = r.data;
       console.log("  XML: " + (xml?.length ?? 0) + " chars");
       const matches = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/gi)];
@@ -447,6 +469,9 @@ Input: {input}`;
       if (cookiesFilePath) {
         options.cookies = cookiesFilePath;
       }
+      if (process.env.YOUTUBE_PROXY) {
+        options.proxy = process.env.YOUTUBE_PROXY;
+      }
       await youtubedl(cleanVideoUrl, options);
       if (fs.existsSync(audioPath)) {
         downloaded = true;
@@ -468,6 +493,9 @@ Input: {input}`;
         };
         if (cookiesFilePath) {
           options.cookies = cookiesFilePath;
+        }
+        if (process.env.YOUTUBE_PROXY) {
+          options.proxy = process.env.YOUTUBE_PROXY;
         }
         await fallbackDl(cleanVideoUrl, options);
         if (fs.existsSync(audioPath)) {
