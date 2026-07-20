@@ -42,7 +42,7 @@ const Pricing = () => {
 
       // 2. Open Razorpay Checkout
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SkvGWcOe0AOBbG', // Should ideally come from backend or env
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TFjT7pq0AXmyXC', // Should ideally come from backend or env
         amount: data.order.amount,
         currency: data.order.currency,
         name: 'VideoToText AI',

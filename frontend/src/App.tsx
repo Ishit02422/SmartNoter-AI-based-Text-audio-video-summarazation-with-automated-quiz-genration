@@ -15,9 +15,11 @@ import WebSummary from './pages/WebSummary';
 import Pricing from './pages/Pricing';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SummaryProvider } from './context/SummaryContext';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
+    <AuthProvider>
     <SummaryProvider>
       <BrowserRouter>
         <Routes>
@@ -47,6 +49,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </SummaryProvider>
+    </AuthProvider>
   );
 }
 

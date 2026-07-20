@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { signInWithGoogle } from '../firebase';
 import { getIdToken } from 'firebase/auth';
-import { Brain, Video, Music, Layout, Sparkles, CheckCircle2, UserCircle } from 'lucide-react';
+import { Brain, CheckCircle2, UserCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [guestLoading, setGuestLoading] = useState(false);
     const navigate = useNavigate();
+    const { token, setAuthData } = useAuth();
+
+    // If already logged in, go straight to dashboard
+    useEffect(() => {
+        if (token) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [token, navigate]);
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -39,18 +48,20 @@ const Login = () => {
             const backendToken = res.headers['x-auth-token'] || res.data?.token || idToken;
 
             if (backendToken) {
-                localStorage.removeItem('token');
-                localStorage.setItem('token', backendToken);
-                if (res.data) {
-                    localStorage.setItem('user', JSON.stringify(res.data));
-                }
-                window.location.href = '/dashboard'; 
+                setAuthData(backendToken, res.data || null);
+                navigate('/dashboard', { replace: true });
             } else {
                 setError('Login failed. No token received from server.');
             }
         } catch (err: any) {
-            console.error("Login Error: ", err);
-            setError(err.response?.data?.message || err.message || 'Failed to login with Google');
+            // If user simply closed the popup, don't show error
+            const code = err?.code || '';
+            if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+                // Silent reset — user just closed the popup
+            } else {
+                console.error("Login Error: ", err);
+                setError(err.response?.data?.message || err.message || 'Failed to login with Google');
+            }
         } finally {
             setLoading(false);
         }
@@ -77,19 +88,13 @@ const Login = () => {
             };
 
             const res = await api.post('/auth/guest', payload);
-            
+
             const backendToken = res.headers['x-auth-token'] || res.data?.token;
 
             if (backendToken) {
-                localStorage.removeItem('token');
-                localStorage.setItem('token', backendToken);
-                if (res.data) {
-                    localStorage.setItem('user', JSON.stringify(res.data));
-                }
-                window.location.href = '/dashboard'; 
+                setAuthData(backendToken, res.data || null);
+                navigate('/dashboard', { replace: true }); // ✅ No full page reload
             } else {
-                // Some backends might return the user object directly with token in headers
-                // If it worked but token is missing in body, check headers again
                 setError('Guest login failed. Could not authenticate.');
             }
         } catch (err: any) {
@@ -124,9 +129,6 @@ const Login = () => {
                             AI based audio, video & text summarization with automated quiz generation.
                         </p>
                     </div>
-
-
-                    
                 </div>
 
                 {/* Right Side: Login Card */}
@@ -160,14 +162,18 @@ const Login = () => {
                                     disabled={loading || guestLoading}
                                     className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-white hover:bg-slate-50 text-slate-900 rounded-2xl font-bold transition-all duration-300 disabled:opacity-50 transform hover:-translate-y-1 active:translate-y-0 shadow-lg"
                                 >
-                                    <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
-                                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                                        <path fill="none" d="M0 0h48v48H0z" />
-                                    </svg>
-                                    {loading ? 'Please wait...' : 'Sign in with Google'}
+                                    {loading ? (
+                                        <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
+                                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                                            <path fill="none" d="M0 0h48v48H0z" />
+                                        </svg>
+                                    )}
+                                    {loading ? 'Signing in...' : 'Sign in with Google'}
                                 </button>
 
                                 <div className="relative py-4 flex items-center">
@@ -181,8 +187,12 @@ const Login = () => {
                                     disabled={loading || guestLoading}
                                     className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-2xl font-bold transition-all duration-300 disabled:opacity-50 transform hover:-translate-y-1 active:translate-y-0 shadow-lg"
                                 >
-                                    <UserCircle className="w-5 h-5 text-indigo-400" />
-                                    {guestLoading ? 'Setting up Guest...' : 'Continue as Guest'}
+                                    {guestLoading ? (
+                                        <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <UserCircle className="w-5 h-5 text-indigo-400" />
+                                    )}
+                                    {guestLoading ? 'Setting up...' : 'Continue as Guest'}
                                 </button>
 
                                 <div className="pt-8 space-y-4">
@@ -196,7 +206,7 @@ const Login = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <p className="mt-12 text-slate-500 text-xs">
                                 By signing in, you agree to our <span className="underline hover:text-indigo-400 transition cursor-pointer">Terms</span> and <span className="underline hover:text-indigo-400 transition cursor-pointer">Privacy Policy</span>.
                             </p>
