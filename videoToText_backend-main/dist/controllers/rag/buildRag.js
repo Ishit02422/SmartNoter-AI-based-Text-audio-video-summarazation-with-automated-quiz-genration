@@ -136,11 +136,12 @@ Input: {input}`;
             // 3. Supadata.ai free transcript API (handles YouTube from their servers — no IP block)
             try {
                 console.log("Method 3: Supadata.ai API...");
-                const supadataKey = process.env.SUPADATA_API_KEY;
-                const supadataHeaders = { "Content-Type": "application/json" };
-                if (supadataKey)
-                    supadataHeaders["x-api-key"] = supadataKey;
-                const supadataRes = await axios_1.default.get(`https://api.supadata.ai/v1/youtube/transcript?videoId=${videoId}&text=true`, { timeout: 25000, headers: supadataHeaders });
+                const supadataKey = process.env.SUPADATA_API_KEY || "sd_ae2607e0ee29774d29b26753b844bb36";
+                const supadataHeaders = {
+                    "Content-Type": "application/json",
+                    "x-api-key": supadataKey
+                };
+                const supadataRes = await axios_1.default.get(`https://api.supadata.ai/v1/transcript?url=https://www.youtube.com/watch?v=${videoId}&text=true`, { timeout: 25000, headers: supadataHeaders });
                 const raw3 = supadataRes.data;
                 const text3 = typeof raw3 === "string" ? raw3 : ((raw3 === null || raw3 === void 0 ? void 0 : raw3.content) || (raw3 === null || raw3 === void 0 ? void 0 : raw3.transcript) || (raw3 === null || raw3 === void 0 ? void 0 : raw3.text) || "");
                 if (text3.length > 20) {
