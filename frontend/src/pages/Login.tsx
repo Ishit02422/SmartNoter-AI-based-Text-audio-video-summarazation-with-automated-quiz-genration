@@ -24,8 +24,14 @@ const Login = () => {
         setLoading(true);
         setError('');
 
+        const timeoutId = setTimeout(() => {
+            setLoading(false);
+            setError('Google login popup is taking longer than expected. Please check if the popup was blocked by your browser or is open in the background.');
+        }, 15000);
+
         try {
             const firebaseUser = await signInWithGoogle();
+            clearTimeout(timeoutId);
             const idToken = await getIdToken(firebaseUser, true);
 
             const payload = {
@@ -54,6 +60,7 @@ const Login = () => {
                 setError('Login failed. No token received from server.');
             }
         } catch (err: any) {
+            clearTimeout(timeoutId);
             // If user simply closed the popup, don't show error
             const code = err?.code || '';
             if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
