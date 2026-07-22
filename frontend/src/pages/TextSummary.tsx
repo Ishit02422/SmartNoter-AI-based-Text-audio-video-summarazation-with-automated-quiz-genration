@@ -1,11 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { Type, FileText, AlertCircle, Copy, Check, Trash2, Zap } from 'lucide-react';
+import { Type, FileText, AlertCircle, Copy, Check, Trash2, Zap, Volume2, VolumeX, Pause, Play, Download } from 'lucide-react';
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
-
-
 
 const translations: Record<string, any> = {
     en: {
@@ -22,7 +20,13 @@ const translations: Record<string, any> = {
         errorMinLength: "Please enter at least 50 characters for a meaningful summary.",
         errorGeneral: "Something went wrong. Please try again.",
         historyTitle: "Recent Summaries",
-        noHistory: "No summaries yet. Start by pasting some text above!"
+        noHistory: "No summaries yet. Start by pasting some text above!",
+        listen: "Listen",
+        stop: "Stop",
+        pause: "Pause",
+        resume: "Resume",
+        downloadTxt: "Export TXT",
+        downloadMd: "Export MD",
     },
     gu: {
         title: "લખાણનો સારાંશ",
@@ -38,11 +42,17 @@ const translations: Record<string, any> = {
         errorMinLength: "અર્થપૂર્ણ સારાંશ માટે કૃપા કરીને ઓછામાં ઓછા ૫૦ અક્ષરો દાખલ કરો.",
         errorGeneral: "કંઈક ખોટું થયું. ફરી પ્રયાસ કરો.",
         historyTitle: "તાજેતરના સારાંશ",
-        noHistory: "હજી સુધી કોઈ સારાંશ નથી. ઉપર લખાણ પેસ્ટ કરીને શરૂઆત કરો!"
+        noHistory: "હજી સુધી કોઈ સારાંશ નથી. ઉપર લખાણ પેસ્ટ કરીને શરૂઆત કરો!",
+        listen: "સાંભળો",
+        stop: "બંધ કરો",
+        pause: "અટકાવો",
+        resume: "ચાલુ કરો",
+        downloadTxt: "TXT ડાઉનલોડ",
+        downloadMd: "MD ડાઉનલોડ",
     },
     hi: {
         title: "लेख सारांश",
-        subtitle: "अपनी सामग्री नीचे पेस्ट करें और AI को सेकंडोंમાં महत्वपूर्ण अंतर्दृष्टि અને पेशेवर सारांश निकालने दें।",
+        subtitle: "अपनी सामग्री नीचे पेस्ट करें और AI को सेकंडों में महत्वपूर्ण अंतर्दृष्टि और पेशेवर सारांश निकालने दें।",
         placeholder: "अपनी सामग्री यहाँ पेस्ट करें (न्यूनतम 50 अक्षर)...",
         actionBtn: "सारांश तैयार करें",
         generating: "AI विश्लेषण कर रहा है...",
@@ -54,7 +64,13 @@ const translations: Record<string, any> = {
         errorMinLength: "सार्थक सारांश के लिए कृपया कम से कम 50 अक्षर दर्ज करें.",
         errorGeneral: "कुछ गलत हो गया. कृपया पुनः प्रयास करें.",
         historyTitle: "हाल के सारांश",
-        noHistory: "अभी तक कोई सारांश नहीं है. ऊपर टेक्स्ट पेस्ट करके शुरू करें!"
+        noHistory: "अभी तक कोई सारांश नहीं है. ऊपर टेक्स्ट पेस्ट करके शुरू करें!",
+        listen: "सुनें",
+        stop: "रोकें",
+        pause: "विराम",
+        resume: "फिर शुरू करें",
+        downloadTxt: "TXT डाउनलोड",
+        downloadMd: "MD डाउनलोड",
     }
 };
 
@@ -66,9 +82,19 @@ const TextSummary = () => {
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
 
-    const isOurSource = lastSource === 'text';
+    // Audio reader state
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
 
+    const isOurSource = lastSource === 'text';
     const t = (key: string) => translations[language][key] || key;
+
+    // Clean up speech synthesis on unmount
+    useEffect(() => {
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, []);
 
     const handleCopyAll = () => {
         if (!summary) return;
@@ -88,6 +114,10 @@ const TextSummary = () => {
         setLoading(true);
         setError('');
         clearSummary();
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setIsPaused(false);
+
         try {
             const res = await api.post('/generateSummaryText/direct', { 
                 text, 
@@ -105,6 +135,92 @@ const TextSummary = () => {
         setText('');
         clearSummary();
         setError('');
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setIsPaused(false);
+    };
+
+    // TTS Logic
+    const handleSpeech = () => {
+        if (!summary?.summarization) return;
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            setIsPaused(false);
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(summary.summarization);
+        const langMap: Record<string, string> = {
+            en: 'en-US',
+            hi: 'hi-IN',
+            gu: 'gu-IN'
+        };
+        utterance.lang = langMap[language] || 'en-US';
+
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            setIsPaused(false);
+        };
+
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            setIsPaused(false);
+        };
+
+        setIsSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    const handlePauseSpeech = () => {
+        if (isPaused) {
+            window.speechSynthesis.resume();
+            setIsPaused(false);
+        } else {
+            window.speechSynthesis.pause();
+            setIsPaused(true);
+        }
+    };
+
+    // File download exports
+    const handleDownloadTxt = () => {
+        if (!summary) return;
+        let textData = `TITLE: ${summary.title || 'Text Summary'}\n\n`;
+        textData += `EXECUTIVE SUMMARY:\n${summary.summarization}\n\n`;
+        if (summary.keyPoints && summary.keyPoints.length > 0) {
+            textData += `KEY INSIGHTS:\n- ${summary.keyPoints.join('\n- ')}\n\n`;
+        }
+        if (summary.actionPoints && summary.actionPoints.length > 0) {
+            textData += `ACTIONABLE STEPS:\n- ${summary.actionPoints.join('\n- ')}\n\n`;
+        }
+        textData += `Generated with SmartNoter AI`;
+        const blob = new Blob([textData], { type: 'text/plain;charset=utf-8' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${(summary.title || 'text_summary').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.txt`;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
+    };
+
+    const handleDownloadMd = () => {
+        if (!summary) return;
+        let textData = `# ${summary.title || 'Text Summary'}\n\n## Executive Summary\n${summary.summarization}\n\n`;
+        if (summary.keyPoints && summary.keyPoints.length > 0) {
+            textData += `## Key Insights\n- ${summary.keyPoints.join('\n- ')}\n\n`;
+        }
+        if (summary.actionPoints && summary.actionPoints.length > 0) {
+            textData += `## Actionable Steps\n- ${summary.actionPoints.join('\n- ')}\n\n`;
+        }
+        textData += `*Generated with SmartNoter AI*`;
+        const blob = new Blob([textData], { type: 'text/markdown;charset=utf-8' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${(summary.title || 'text_summary').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.md`;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
     };
 
     return (
@@ -200,18 +316,64 @@ const TextSummary = () => {
             {/* Result Section */}
             {isOurSource && summary && (
                 <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200 border border-slate-100 space-y-10 animate-fade-in-up">
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
                         <h2 className="text-3xl font-black text-slate-800 flex items-center gap-4">
                             <FileText className="w-8 h-8 text-indigo-500" />
                             {summary.title || t('executiveSummary')}
                         </h2>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* TTS Button */}
+                            <button
+                                onClick={handleSpeech}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition font-bold ${
+                                    isSpeaking 
+                                    ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                                }`}
+                                title={isSpeaking ? t('stop') : t('listen')}
+                            >
+                                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                {isSpeaking ? t('stop') : t('listen')}
+                            </button>
+
+                            {isSpeaking && (
+                                <button
+                                    onClick={handlePauseSpeech}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition font-bold"
+                                    title={isPaused ? t('resume') : t('pause')}
+                                >
+                                    {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                                    {isPaused ? t('resume') : t('pause')}
+                                </button>
+                            )}
+
+                            {/* Copy All Button */}
                             <button
                                 onClick={handleCopyAll}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
                             >
                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                 {copied ? t('copied') : t('copyAll')}
+                            </button>
+
+                            {/* Export TXT */}
+                            <button
+                                onClick={handleDownloadTxt}
+                                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
+                                title={t('downloadTxt')}
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>TXT</span>
+                            </button>
+
+                            {/* Export MD */}
+                            <button
+                                onClick={handleDownloadMd}
+                                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
+                                title={t('downloadMd')}
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>MD</span>
                             </button>
                         </div>
                     </div>
