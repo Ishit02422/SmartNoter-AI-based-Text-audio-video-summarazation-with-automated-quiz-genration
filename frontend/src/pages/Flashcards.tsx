@@ -23,16 +23,18 @@ const Flashcards = () => {
         setLoading(true);
         setError('');
         try {
-            // First try to get existing flashcards
-            const res = await api.post('/flashcard/get', { summaryId, source });
-            if (res.data && res.data.result && res.data.result.flashcards?.length > 0) {
-                setFlashcards(res.data.result.flashcards);
+            const res = await api.post('/flashcard/getFlashCards', { summaryId, source });
+            const cards = res.data?.result?.flashcards || res.data?.result?.cards || [];
+
+            if (Array.isArray(cards) && cards.length > 0) {
+                setFlashcards(cards);
+                setCurrentIndex(0);
+                setIsFlipped(false);
             } else {
-                // If none exist, generate new ones
                 await handleGenerateFlashcards();
             }
         } catch (err: any) {
-            handleGenerateFlashcards();
+            await handleGenerateFlashcards();
         } finally {
             setLoading(false);
         }
@@ -42,8 +44,14 @@ const Flashcards = () => {
         setLoading(true);
         try {
             const res = await api.post('/flashcard/', { summaryId, source });
-            if (res.data && res.data.result && res.data.result.flashcards) {
-                setFlashcards(res.data.result.flashcards);
+            const cards = res.data?.result?.flashcards || res.data?.result?.cards || [];
+
+            if (Array.isArray(cards) && cards.length > 0) {
+                setFlashcards(cards);
+                setCurrentIndex(0);
+                setIsFlipped(false);
+            } else {
+                setError('No flashcards were returned for this summary.');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to generate flashcards.');
