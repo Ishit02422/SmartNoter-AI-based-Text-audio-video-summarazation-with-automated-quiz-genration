@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Upload, FileText, AlertCircle, Check, Copy, FileAudio, FileBadge } from 'lucide-react';
+import { Upload, FileText, AlertCircle, Check, Copy, FileAudio, FileBadge, Download } from 'lucide-react';
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
+import { downloadAsPdf, downloadAsMd } from '../utils/exportUtils';
 
 
 
@@ -281,6 +282,40 @@ const FileSummary = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleDownloadTxt = () => {
+        if (!summary) return;
+        const text = `TITLE: ${summary.title}\n\nEXECUTIVE SUMMARY:\n${summary.summarization}\n\nGenerated with SmartNoter AI`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.txt`;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
+    };
+
+    const handleDownloadPdf = () => {
+        if (!summary) return;
+        downloadAsPdf({
+            title: summary.title,
+            url: summary.url || (summary as any).pdfUrl || (summary as any).audioUrl || undefined,
+            summarization: summary.summarization,
+            keyPoints: summary.keyPoints,
+            actionPoints: summary.actionPoints
+        });
+    };
+
+    const handleDownloadMd = () => {
+        if (!summary) return;
+        downloadAsMd({
+            title: summary.title,
+            url: summary.url || (summary as any).pdfUrl || (summary as any).audioUrl || undefined,
+            summarization: summary.summarization,
+            keyPoints: summary.keyPoints,
+            actionPoints: summary.actionPoints
+        });
+    };
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <div className="flex items-start justify-between">
@@ -377,13 +412,45 @@ const FileSummary = () => {
                             <FileText className="w-6 h-6 text-indigo-500" />
                             {summary.title || t('executiveSummary')}
                         </h2>
-                        <button
-                            onClick={handleCopyAll}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                        >
-                            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                            {copied ? t('done') : t('copy')}
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                onClick={handleCopyAll}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                            >
+                                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                {copied ? t('done') : t('copy')}
+                            </button>
+
+                            {/* Export TXT */}
+                            <button
+                                onClick={handleDownloadTxt}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                title="Export TXT"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>TXT</span>
+                            </button>
+
+                            {/* Export MD */}
+                            <button
+                                onClick={handleDownloadMd}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                title="Export MD"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>MD</span>
+                            </button>
+
+                            {/* Export PDF */}
+                            <button
+                                onClick={handleDownloadPdf}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                title="Export PDF"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>PDF</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div className="space-y-4">

@@ -4,6 +4,7 @@ import { Youtube, Search, AlertCircle, FileText, Copy, Check, Trash2, Volume2, V
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
+import { downloadAsPdf, downloadAsMd } from '../utils/exportUtils';
 
 const translations: Record<string, any> = {
     en: {
@@ -272,6 +273,28 @@ const VideoSummary = () => {
         URL.revokeObjectURL(downloadUrl);
     };
 
+    const handleDownloadPdf = () => {
+        if (!summary) return;
+        downloadAsPdf({
+            title: summary.title,
+            url: summary.url || (summary as any).videoUrl || undefined,
+            summarization: summary.summarization,
+            keyPoints: summary.keyPoints,
+            actionPoints: summary.actionPoints
+        });
+    };
+
+    const handleDownloadMd = () => {
+        if (!summary) return;
+        downloadAsMd({
+            title: summary.title,
+            url: summary.url || (summary as any).videoUrl || undefined,
+            summarization: summary.summarization,
+            keyPoints: summary.keyPoints,
+            actionPoints: summary.actionPoints
+        });
+    };
+
 
     return (
         <div className="max-w-6xl mx-auto space-y-8">
@@ -419,6 +442,26 @@ const VideoSummary = () => {
                                 >
                                     <Download className="w-4 h-4" />
                                     <span>TXT</span>
+                                </button>
+
+                                {/* Export MD Button */}
+                                <button
+                                    onClick={handleDownloadMd}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                    title={t('downloadMd') || 'Export MD'}
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span>MD</span>
+                                </button>
+
+                                {/* Export PDF Button */}
+                                <button
+                                    onClick={handleDownloadPdf}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                    title="Export PDF"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span>PDF</span>
                                 </button>
 
 
