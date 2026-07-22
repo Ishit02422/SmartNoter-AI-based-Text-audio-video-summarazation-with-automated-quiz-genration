@@ -204,24 +204,6 @@ const TextSummary = () => {
         URL.revokeObjectURL(downloadUrl);
     };
 
-    const handleDownloadMd = () => {
-        if (!summary) return;
-        let textData = `# ${summary.title || 'Text Summary'}\n\n## Executive Summary\n${summary.summarization}\n\n`;
-        if (summary.keyPoints && summary.keyPoints.length > 0) {
-            textData += `## Key Insights\n- ${summary.keyPoints.join('\n- ')}\n\n`;
-        }
-        if (summary.actionPoints && summary.actionPoints.length > 0) {
-            textData += `## Actionable Steps\n- ${summary.actionPoints.join('\n- ')}\n\n`;
-        }
-        textData += `*Generated with SmartNoter AI*`;
-        const blob = new Blob([textData], { type: 'text/markdown;charset=utf-8' });
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${(summary.title || 'text_summary').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.md`;
-        link.click();
-        URL.revokeObjectURL(downloadUrl);
-    };
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
@@ -364,16 +346,6 @@ const TextSummary = () => {
                             >
                                 <Download className="w-4 h-4" />
                                 <span>TXT</span>
-                            </button>
-
-                            {/* Export MD */}
-                            <button
-                                onClick={handleDownloadMd}
-                                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
-                                title={t('downloadMd')}
-                            >
-                                <Download className="w-4 h-4" />
-                                <span>MD</span>
                             </button>
                         </div>
                     </div>

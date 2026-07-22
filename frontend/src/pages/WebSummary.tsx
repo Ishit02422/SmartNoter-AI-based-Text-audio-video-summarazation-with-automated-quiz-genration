@@ -157,21 +157,6 @@ const WebSummary = () => {
         URL.revokeObjectURL(downloadUrl);
     };
 
-    const handleDownloadMd = () => {
-        if (!summary) return;
-        let text = `# ${summary.title}\n\n**Source:** [${summary.url || (summary as any).url || 'Web Link'}](${summary.url || (summary as any).url || ''})\n\n## Executive Summary\n${summary.summarization}\n\n`;
-        if (summary.keyPoints && summary.keyPoints.length > 0) {
-            text += `## Key Points\n- ${summary.keyPoints.join('\n- ')}\n\n`;
-        }
-        text += `*Generated with SmartNoter AI*`;
-        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.md`;
-        link.click();
-        URL.revokeObjectURL(downloadUrl);
-    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -299,15 +284,7 @@ const WebSummary = () => {
                                 <span>TXT</span>
                             </button>
 
-                            {/* Export MD */}
-                            <button
-                                onClick={handleDownloadMd}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
-                                title="Export MD"
-                            >
-                                <Download className="w-4 h-4" />
-                                <span>MD</span>
-                            </button>
+
                         </div>
                     </div>
 
