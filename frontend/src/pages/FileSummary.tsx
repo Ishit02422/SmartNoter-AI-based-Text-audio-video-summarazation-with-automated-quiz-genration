@@ -4,7 +4,7 @@ import { Upload, FileText, AlertCircle, Check, Copy, FileAudio, FileBadge, Downl
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
-import { downloadAsPdf } from '../utils/exportUtils';
+import { downloadAsPdf, downloadAsMd } from '../utils/exportUtils';
 
 
 
@@ -352,6 +352,17 @@ const FileSummary = () => {
         });
     };
 
+    const handleDownloadMd = () => {
+        if (!summary) return;
+        downloadAsMd({
+            title: summary.title,
+            url: summary.url || (summary as any).pdfUrl || (summary as any).audioUrl || undefined,
+            summarization: summary.summarization,
+            keyPoints: summary.keyPoints,
+            actionPoints: summary.actionPoints
+        });
+    };
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <div className="flex items-start justify-between">
@@ -491,6 +502,16 @@ const FileSummary = () => {
                             >
                                 <Download className="w-4 h-4" />
                                 <span>TXT</span>
+                            </button>
+
+                            {/* Export MD */}
+                            <button
+                                onClick={handleDownloadMd}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
+                                title="Export MD"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>MD</span>
                             </button>
 
                             {/* Export PDF */}

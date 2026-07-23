@@ -344,3 +344,69 @@ export const downloadMindmapAsTxt = (mindmap: any) => {
     URL.revokeObjectURL(downloadUrl);
 };
 
+export const downloadMindmapAsPdf = (mindmap: any) => {
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
+    let y = 25;
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('SMARTNOTER AI MINDMAP OUTLINE', margin, y);
+    y += 12;
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    const titleLines = doc.splitTextToSize(`Central Theme: ${mindmap.title || 'Central Theme'}`, contentWidth);
+    doc.text(titleLines, margin, y);
+    y += (titleLines.length * 7) + 5;
+
+    if (Array.isArray(mindmap.topics)) {
+        mindmap.topics.forEach((top: any, i: number) => {
+            if (y + 20 > pageHeight - margin) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(30, 41, 59);
+            const topicLines = doc.splitTextToSize(`${i + 1}. ${top.topic}`, contentWidth);
+            doc.text(topicLines, margin, y);
+            y += (topicLines.length * 6) + 3;
+
+            if (Array.isArray(top.subtopics)) {
+                top.subtopics.forEach((sub: any) => {
+                    if (y + 10 > pageHeight - margin) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFont('Helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(71, 85, 105);
+                    const subTitle = sub.subTopic || sub.title || sub;
+                    const subLines = doc.splitTextToSize(`• ${subTitle}`, contentWidth - 5);
+                    doc.text(subLines, margin + 5, y);
+                    y += (subLines.length * 5) + 1;
+
+                    if (sub.detail) {
+                        doc.setFont('Helvetica', 'normal');
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(100, 116, 139);
+                        const detailLines = doc.splitTextToSize(`${sub.detail}`, contentWidth - 10);
+                        doc.text(detailLines, margin + 10, y);
+                        y += (detailLines.length * 5) + 3;
+                    }
+                });
+            }
+            y += 5;
+        });
+    }
+
+    doc.save(`${(mindmap.title || 'mindmap').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_outline.pdf`);
+};
+

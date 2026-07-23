@@ -208,8 +208,17 @@ const Flashcards = () => {
 
                             {/* Back Side */}
                             <div className="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center p-10 text-center text-white">
-                                <span className="absolute top-6 left-6 px-4 py-1.5 bg-white/20 text-white rounded-full text-xs font-black uppercase tracking-widest">Answer</span>
-                                <div className="max-h-[70%] overflow-y-auto custom-scrollbar pr-2">
+                                <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+                                    <span className="px-4 py-1.5 bg-white/20 text-white rounded-full text-xs font-black uppercase tracking-widest">Answer</span>
+                                    <button
+                                        onClick={handleSpeakCard}
+                                        className="p-2 bg-white/10 hover:bg-white/30 text-white rounded-full transition z-20"
+                                        title={isSpeaking ? "Stop Reading" : "Listen"}
+                                    >
+                                        {isSpeaking ? <VolumeX className="w-4 h-4 text-red-300" /> : <Volume2 className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                <div className="max-h-[70%] overflow-y-auto custom-scrollbar pr-2 mt-12">
                                     <p className="text-2xl font-bold leading-relaxed">
                                         {flashcards[currentIndex].ans}
                                     </p>
