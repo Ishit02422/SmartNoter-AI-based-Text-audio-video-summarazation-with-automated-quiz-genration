@@ -4,7 +4,7 @@ import { Type, FileText, AlertCircle, Copy, Check, Trash2, Zap, Volume2, VolumeX
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
-import { downloadAsPdf, downloadAsMd } from '../utils/exportUtils';
+import { downloadAsPdf } from '../utils/exportUtils';
 
 const translations: Record<string, any> = {
     en: {
@@ -216,17 +216,6 @@ const TextSummary = () => {
         });
     };
 
-    const handleDownloadMd = () => {
-        if (!summary) return;
-        downloadAsMd({
-            title: summary.title || 'Text Summary',
-            url: summary.url || undefined,
-            summarization: summary.summarization,
-            keyPoints: summary.keyPoints,
-            actionPoints: summary.actionPoints
-        });
-    };
-
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
@@ -369,16 +358,6 @@ const TextSummary = () => {
                             >
                                 <Download className="w-4 h-4" />
                                 <span>TXT</span>
-                            </button>
-
-                            {/* Export MD */}
-                            <button
-                                onClick={handleDownloadMd}
-                                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm border border-slate-100 hover:border-indigo-100"
-                                title={t('downloadMd') || 'Export MD'}
-                            >
-                                <Download className="w-4 h-4" />
-                                <span>MD</span>
                             </button>
 
                             {/* Export PDF */}

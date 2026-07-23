@@ -4,7 +4,7 @@ import { Globe, Search, AlertCircle, FileText, Copy, Check, Trash2, ExternalLink
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
-import { downloadAsPdf, downloadAsMd } from '../utils/exportUtils';
+import { downloadAsPdf } from '../utils/exportUtils';
 
 const WebSummary = () => {
     const { lastSummary: summary, lastSource, setSummary: setGlobalSummary, clearSummary } = useSummary();
@@ -169,17 +169,6 @@ const WebSummary = () => {
         });
     };
 
-    const handleDownloadMd = () => {
-        if (!summary) return;
-        downloadAsMd({
-            title: summary.title,
-            url: summary.url || (summary as any).url || undefined,
-            summarization: summary.summarization,
-            keyPoints: summary.keyPoints,
-            actionPoints: summary.actionPoints
-        });
-    };
-
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -305,16 +294,6 @@ const WebSummary = () => {
                             >
                                 <Download className="w-4 h-4" />
                                 <span>TXT</span>
-                            </button>
-
-                            {/* Export MD */}
-                            <button
-                                onClick={handleDownloadMd}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
-                                title="Export MD"
-                            >
-                                <Download className="w-4 h-4" />
-                                <span>MD</span>
                             </button>
 
                             {/* Export PDF */}
