@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Brain, AlertCircle, ChevronDown, ChevronRight, Share2 } from 'lucide-react';
+import { Brain, AlertCircle, ChevronDown, ChevronRight, Share2, Download } from 'lucide-react';
 import api from '../api';
+import { downloadMindmapAsJson, downloadMindmapAsTxt } from '../utils/exportUtils';
 import { 
     ReactFlow, 
     Background, 
@@ -10,6 +11,7 @@ import {
     useNodesState, 
     useEdgesState 
 } from '@xyflow/react';
+
 
 const Mindmap = () => {
     const location = useLocation();
@@ -277,9 +279,24 @@ const Mindmap = () => {
                             </button>
                         </div>
 
+                        <button
+                            onClick={() => downloadMindmapAsTxt(mindmap)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition"
+                            title="Export Outline TXT"
+                        >
+                            <Download className="w-3.5 h-3.5 text-indigo-600" /> TXT
+                        </button>
+                        <button
+                            onClick={() => downloadMindmapAsJson(mindmap)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition"
+                            title="Export JSON Structure"
+                        >
+                            <Download className="w-3.5 h-3.5 text-indigo-600" /> JSON
+                        </button>
+
                         <button 
                             onClick={handleExport}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition"
                         >
                             {copied ? (
                                 <>
@@ -287,13 +304,14 @@ const Mindmap = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Share2 className="w-4 h-4" /> Export Map
+                                    <Share2 className="w-4 h-4" /> Copy Text
                                 </>
                             )}
                         </button>
                     </div>
                 )}
             </header>
+
 
             {loading && (
                 <div className="bg-white p-20 rounded-2xl border border-slate-100 flex flex-col items-center shadow-sm">

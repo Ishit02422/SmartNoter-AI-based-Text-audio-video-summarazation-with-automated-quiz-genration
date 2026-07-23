@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Upload, FileText, AlertCircle, Check, Copy, FileAudio, FileBadge, Download } from 'lucide-react';
+import { Upload, FileText, AlertCircle, Check, Copy, FileAudio, FileBadge, Download, Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import api from '../api';
 import AIActions from '../components/AIActions';
 import { useSummary } from '../context/SummaryContext';
@@ -169,8 +169,55 @@ const FileSummary = () => {
     const [loadingStatus, setLoadingStatus] = useState('');
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
 
     const isOurSource = lastSource === 'pdf' || lastSource === 'audio';
+
+    const handleSpeech = () => {
+        if (!summary || !summary.summarization) return;
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            setIsPaused(false);
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(summary.summarization);
+        const langMap: Record<string, string> = {
+            en: 'en-US',
+            hi: 'hi-IN',
+            gu: 'gu-IN',
+            es: 'es-ES',
+            fr: 'fr-FR'
+        };
+        utterance.lang = langMap[language] || 'en-US';
+
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            setIsPaused(false);
+        };
+
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            setIsPaused(false);
+        };
+
+        setIsSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    const handlePauseSpeech = () => {
+        if (isPaused) {
+            window.speechSynthesis.resume();
+            setIsPaused(false);
+        } else {
+            window.speechSynthesis.pause();
+            setIsPaused(true);
+        }
+    };
+
 
     const t = (key: string) => translations[language]?.[key] || translations.en[key];
 
@@ -413,8 +460,34 @@ const FileSummary = () => {
                             {summary.title || t('executiveSummary')}
                         </h2>
                         <div className="flex flex-wrap items-center gap-2">
+                            {/* TTS Button */}
+                            <button
+                                onClick={handleSpeech}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition ${
+                                    isSpeaking 
+                                    ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                                }`}
+                                title={isSpeaking ? 'Stop' : 'Listen'}
+                            >
+                                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                {isSpeaking ? 'Stop' : 'Listen'}
+                            </button>
+
+                            {isSpeaking && (
+                                <button
+                                    onClick={handlePauseSpeech}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition"
+                                    title={isPaused ? 'Resume' : 'Pause'}
+                                >
+                                    {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                                    {isPaused ? 'Resume' : 'Pause'}
+                                </button>
+                            )}
+
                             <button
                                 onClick={handleCopyAll}
+
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition bg-white"
                             >
                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}

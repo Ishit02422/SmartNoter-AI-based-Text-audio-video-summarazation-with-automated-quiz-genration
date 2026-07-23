@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Library, AlertCircle, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { Library, AlertCircle, ChevronLeft, ChevronRight, RotateCcw, Download, Volume2, VolumeX } from 'lucide-react';
 import api from '../api';
+import { downloadFlashcardsAsPdf, downloadFlashcardsAsTxt } from '../utils/exportUtils';
 
 const Flashcards = () => {
     const location = useLocation();
@@ -12,6 +13,30 @@ const Flashcards = () => {
     const [error, setError] = useState('');
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    const handleSpeakCard = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            return;
+        }
+
+        const currentCard = flashcards[currentIndex];
+        if (!currentCard) return;
+
+        const textToRead = isFlipped ? `Answer: ${currentCard.ans}` : `Question: ${currentCard.que}`;
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        setIsSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+    };
+
 
     useEffect(() => {
         if (summaryId && source) {
@@ -97,7 +122,7 @@ const Flashcards = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20">
-            <header className="flex items-center justify-between">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
                         <Library className="w-8 h-8 text-indigo-500" />
@@ -106,8 +131,26 @@ const Flashcards = () => {
                     <p className="text-slate-500 mt-2 font-medium">Flip cards to test your memory.</p>
                 </div>
                 {flashcards.length > 0 && (
-                    <div className="bg-indigo-50 px-4 py-2 rounded-xl text-indigo-600 font-bold text-sm">
-                        {currentIndex + 1} / {flashcards.length}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => downloadFlashcardsAsTxt(flashcards)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition"
+                            title="Export Deck TXT"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            TXT
+                        </button>
+                        <button
+                            onClick={() => downloadFlashcardsAsPdf(flashcards)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition"
+                            title="Export Deck PDF"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            PDF
+                        </button>
+                        <div className="bg-indigo-50 px-4 py-2 rounded-xl text-indigo-600 font-bold text-sm">
+                            {currentIndex + 1} / {flashcards.length}
+                        </div>
                     </div>
                 )}
             </header>
@@ -137,7 +180,17 @@ const Flashcards = () => {
                         <div className={`relative w-full h-full duration-700 preserve-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''}`}>
                             {/* Front Side */}
                             <div className="absolute inset-0 backface-hidden bg-white rounded-[2.5rem] border-2 border-slate-200 shadow-2xl flex flex-col items-center justify-center p-10 text-center">
-                                <span className="absolute top-6 left-6 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest">Question</span>
+                                <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+                                    <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest">Question</span>
+                                    <button
+                                        onClick={handleSpeakCard}
+                                        className="p-2 bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 rounded-full transition z-20"
+                                        title={isSpeaking ? "Stop Reading" : "Listen"}
+                                    >
+                                        {isSpeaking ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4" />}
+                                    </button>
+                                </div>
+
                                 <div className="w-full h-40 mb-6 rounded-2xl overflow-hidden bg-slate-50">
                                     {flashcards[currentIndex].imageUrl ? (
                                         <img src={flashcards[currentIndex].imageUrl} className="w-full h-full object-cover" alt="hint" />

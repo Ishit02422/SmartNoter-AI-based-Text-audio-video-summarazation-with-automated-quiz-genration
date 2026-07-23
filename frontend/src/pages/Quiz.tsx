@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { CheckSquare, AlertCircle, CheckCircle2, ChevronRight, XCircle } from 'lucide-react';
+import { CheckSquare, AlertCircle, CheckCircle2, ChevronRight, XCircle, Download } from 'lucide-react';
 import api from '../api';
+import { downloadQuizAsPdf, downloadQuizAsTxt } from '../utils/exportUtils';
+
 
 const Quiz = () => {
     const location = useLocation();
@@ -78,7 +80,7 @@ const Quiz = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
-            <header className="flex items-center justify-between gap-4">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
                         <CheckSquare className="w-8 h-8 text-indigo-500" />
@@ -86,12 +88,33 @@ const Quiz = () => {
                     </h1>
                     <p className="text-slate-500 mt-2 font-medium">Verify your understanding of the summary.</p>
                 </div>
-                {quizzes.length > 0 && !showResult && (
-                    <div className="bg-indigo-50 px-4 py-2 rounded-xl text-indigo-600 font-bold text-sm">
-                        Q {currentIndex + 1} / {quizzes.length}
+                {quizzes.length > 0 && (
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => downloadQuizAsTxt(quizzes)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition"
+                            title="Export Quiz TXT"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            TXT
+                        </button>
+                        <button
+                            onClick={() => downloadQuizAsPdf(quizzes)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition"
+                            title="Export Quiz PDF"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            PDF
+                        </button>
+                        {!showResult && (
+                            <div className="bg-indigo-50 px-4 py-2 rounded-xl text-indigo-600 font-bold text-sm">
+                                Q {currentIndex + 1} / {quizzes.length}
+                            </div>
+                        )}
                     </div>
                 )}
             </header>
+
 
             {loading && (
                 <div className="bg-white p-20 rounded-2xl border border-slate-100 flex flex-col items-center shadow-sm">
@@ -168,6 +191,21 @@ const Quiz = () => {
                         {score} <span className="text-slate-200">/</span> {quizzes.length}
                     </div>
 
+                    <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                        <button 
+                            onClick={() => downloadQuizAsPdf(quizzes)}
+                            className="px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-xl flex items-center gap-2 transition"
+                        >
+                            <Download className="w-4 h-4 text-indigo-600" /> Export PDF
+                        </button>
+                        <button 
+                            onClick={() => downloadQuizAsTxt(quizzes)}
+                            className="px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-xl flex items-center gap-2 transition"
+                        >
+                            <Download className="w-4 h-4 text-indigo-600" /> Export TXT
+                        </button>
+                    </div>
+
                     <button 
                         onClick={() => window.location.reload()}
                         className="px-12 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-600/30 flex items-center gap-3"
@@ -178,6 +216,7 @@ const Quiz = () => {
             )}
         </div>
     );
+
 };
 
 export default Quiz;
