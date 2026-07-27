@@ -122,7 +122,7 @@ const user = new Schema<IUser>(
     },
     dailyCredits: {
       type: Number,
-      default: 8,
+      default: 7,
     },
     rewardCount: {
       type: Number,

@@ -27,7 +27,7 @@ const Login = () => {
         const timeoutId = setTimeout(() => {
             setLoading(false);
             setError('Google login popup is taking longer than expected. Please check if the popup was blocked by your browser or is open in the background.');
-        }, 15000);
+        }, 60000);
 
         try {
             const firebaseUser = await signInWithGoogle();
