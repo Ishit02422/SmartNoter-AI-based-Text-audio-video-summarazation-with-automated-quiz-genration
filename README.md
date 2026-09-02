@@ -31,7 +31,6 @@
 - [Project Structure](#-project-structure)
 - [API Modules](#-api-modules)
 - [Getting Started](#-getting-started)
-- [Environment Variables](#-environment-variables)
 - [Docker Setup](#-docker-setup)
 - [Author](#-author)
 
@@ -242,10 +241,6 @@ cd videoToText_backend-main
 # Install dependencies
 npm install
 
-# Create environment file
-cp .env.example .env
-# Fill in your credentials
-
 # Start development server
 npm run watch
 ```
@@ -264,12 +259,6 @@ npm run dev
 ```
 
 The backend runs on **port 6001** by default.
-
----
-
-```
-
-> **Note:** Multiple Gemini API keys can be provided as a comma-separated list. The system auto-rotates between keys to avoid rate limits.
 
 ---
 
