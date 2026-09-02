@@ -267,43 +267,6 @@ The backend runs on **port 6001** by default.
 
 ---
 
-## 🔑 Environment Variables
-
-Create a `.env` file inside `videoToText_backend-main/`:
-
-```env
-# Server
-PORT=6001
-COOKIE_SECRET=your_cookie_secret
-
-# Database
-MONGO_URI=mongodb+srv://your_mongo_connection_string
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Google Gemini (comma-separated keys for rotation)
-GOOGLE_API_KEY=key1,key2,key3
-
-# Firebase
-GOOGLE_APPLICATION_CREDENTIALS=./firebase-admin.json.json
-
-# AssemblyAI
-ASSEMBLYAI_API_KEY=your_assemblyai_key
-
-# AWS S3
-AWS_ACCESS_KEY_ID=your_aws_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=your_bucket_name
-
-# Razorpay
-RAZORPAY_KEY_ID=your_razorpay_key
-RAZORPAY_KEY_SECRET=your_razorpay_secret
-
-# JWT
-JWT_SECRET=your_jwt_secret
-```
 
 > **Note:** Multiple Gemini API keys can be provided as a comma-separated list. The system auto-rotates between keys to avoid rate limits.
 
