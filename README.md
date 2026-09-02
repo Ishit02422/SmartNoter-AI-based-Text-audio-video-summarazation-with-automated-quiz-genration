@@ -267,6 +267,7 @@ The backend runs on **port 6001** by default.
 
 ---
 
+```
 
 > **Note:** Multiple Gemini API keys can be provided as a comma-separated list. The system auto-rotates between keys to avoid rate limits.
 
